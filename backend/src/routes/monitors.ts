@@ -372,7 +372,7 @@ router.get('/:id/checks', authMiddleware, asyncHandler(async (req, res) => {
     page,
     limit,
     totalPages: Math.ceil(total / limit),
-  }));
+  });
 }));
 
 export default router;
