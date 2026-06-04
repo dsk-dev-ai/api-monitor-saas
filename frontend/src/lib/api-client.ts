@@ -11,9 +11,11 @@ export const api = axios.create({
 
 // Add auth token to requests
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('access_token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
   }
   return config;
 });
@@ -22,6 +24,10 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
+    if (typeof window === 'undefined') {
+      return Promise.reject(error);
+    }
+
     const originalRequest = error.config;
 
     if (error.response?.status === 401 && !originalRequest._retry) {
