@@ -189,11 +189,19 @@ router.post('/update-password', asyncHandler(async (req, res) => {
     throw new AppError('No token provided', 401);
   }
 
-  const { error } = await supabaseAdmin.auth.updateUser({
-    password,
-  }, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const { data: { user }, error: userError } =
+    await supabaseAdmin.auth.getUser(token);
+
+  if (userError || !user) {
+    throw new AppError('Invalid token', 401);
+  }
+
+  const { error } = await supabaseAdmin.auth.admin.updateUserById(
+    user.id,
+    {
+      password,
+    }
+  );
 
   if (error) {
     throw new AppError(error.message, 400);

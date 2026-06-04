@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
+import type { Prisma } from '@prisma/client';
 import { prisma } from '../config/database';
 import { authMiddleware } from '../middleware/auth';
 import { PLAN_LIMITS } from '../types';
@@ -234,8 +235,12 @@ router.post('/', authMiddleware, asyncHandler(async (req, res) => {
 
   const monitor = await prisma.monitor.create({
     data: {
-      ...data,
-      userId,
+      ...(data as Prisma.MonitorCreateInput),
+      user: {
+        connect: {
+          id: userId,
+        },
+      },
     },
   });
 
