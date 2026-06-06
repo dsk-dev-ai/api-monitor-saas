@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/stores/auth-store';
 import { api } from '@/lib/api-client';
 import { supabase } from '@/lib/supabase-client';
@@ -9,7 +9,11 @@ export function useAuth() {
   const { user, isAuthenticated, isLoading, setUser, setLoading, logout } = useAuthStore();
   const [error, setError] = useState<string | null>(null);
 
-  const checkAuth = useCallback(async () => {
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  const checkAuth = async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('access_token');
@@ -26,11 +30,7 @@ export function useAuth() {
     } finally {
       setLoading(false);
     }
-  }, [logout, setLoading, setUser]);
-
-  useEffect(() => {
-    checkAuth();
-  }, [checkAuth]);
+  };
 
   const signIn = async (email: string, password: string) => {
     try {

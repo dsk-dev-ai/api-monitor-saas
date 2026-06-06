@@ -202,18 +202,8 @@ router.post('/webhook', express.raw({ type: 'application/json' }), asyncHandler(
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
-        let userId: string | undefined;
-        let plan: string | undefined;
-
-        // session.subscription can be a string (subscription ID) or a Subscription object
-        if (typeof session.subscription === 'string') {
-          // metadata may not be available on the subscription string; fall back to session metadata
-          userId = session.metadata?.userId as unknown as string | undefined;
-          plan = session.metadata?.plan as unknown as string | undefined;
-        } else if (session.subscription) {
-          userId = (session.subscription as Stripe.Subscription).metadata?.userId;
-          plan = (session.subscription as Stripe.Subscription).metadata?.plan;
-        }
+        const userId = session.subscription_data?.metadata?.userId;
+        const plan = session.subscription_data?.metadata?.plan;
 
         if (userId && session.subscription) {
           await prisma.subscription.update({

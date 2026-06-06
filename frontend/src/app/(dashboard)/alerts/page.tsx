@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { api } from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,7 +16,7 @@ export default function AlertsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(1);
 
-  const fetchAlerts = useCallback(async () => {
+  const fetchAlerts = async () => {
     try {
       const [alertsRes, statsRes] = await Promise.all([
         api.get(`/alerts?page=${page}&limit=50`),
@@ -29,13 +29,13 @@ export default function AlertsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [page]);
+  };
 
   useEffect(() => {
     fetchAlerts();
     const interval = setInterval(fetchAlerts, 30000);
     return () => clearInterval(interval);
-  }, [fetchAlerts]);
+  }, [page]);
 
   const acknowledgeAlert = async (id: string) => {
     try {

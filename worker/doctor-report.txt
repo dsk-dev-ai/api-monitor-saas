@@ -1,0 +1,48 @@
+=================================================
+ API Monitor SaaS - Project Doctor & Auto Fix
+=================================================
+
+========== SYSTEM ==========
+v22.22.3
+10.9.8
+Docker version 29.5.3, build d1c06ef
+
+========== ENV ==========
+Created .env from .env.example
+
+========== PRISMA FLAGS ==========
+
+========== DOCKER ==========
+docker-compose valid
+
+========== DOCKERIGNORE ==========
+
+========== REPORT ==========
+Backend:
+src/routes/monitors.ts(375,5): error TS1005: ';' expected.
+src/routes/monitors.ts(375,6): error TS1005: ')' expected.
+src/routes/monitors.ts(376,1): error TS1128: Declaration or statement expected.
+src/routes/monitors.ts(376,2): error TS1128: Declaration or statement expected.
+src/routes/monitors.ts(376,3): error TS1128: Declaration or statement expected.
+
+Worker:
+
+> api-monitor-worker@1.0.0 build
+> tsc
+
+src/lib/prisma.ts(1,10): error TS2305: Module '"@prisma/client"' has no exported member 'PrismaClient'.
+
+Frontend:
+[0m[31m[1m>[22m[39m[90m 140 |[39m                 onChange[33m=[39m{(e) [33m=>[39m setFormData({ [33m...[39mformData[33m,[39m expectedStatus[33m:[39m parseInt(e[33m.[39mtarget[33m.[39mvalue) [33m||[39m undefined })}[0m
+[0m [90m     |[39m                                                             [31m[1m^[22m[39m[0m
+[0m [90m 141 |[39m               [33m/[39m[33m>[39m[0m
+[0m [90m 142 |[39m             [33m<[39m[33m/[39m[33mdiv[39m[33m>[39m[0m
+[0m [90m 143 |[39m             [33m<[39m[33mdiv[39m className[33m=[39m[32m"space-y-2"[39m[33m>[39m[0m
+
+=================================================
+ COMPLETE
+=================================================
+
+Next:
+docker compose build --no-cache
+docker compose up -d

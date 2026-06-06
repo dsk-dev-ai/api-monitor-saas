@@ -137,7 +137,7 @@ export function MonitorForm({ onSubmit }: MonitorFormProps) {
                 type="number"
                 placeholder="200"
                 value={formData.expectedStatus}
-                onChange={(e) => setFormData({ ...formData, expectedStatus: parseInt(e.target.value) || 200 })}
+                onChange={(e) => setFormData({ ...formData, expectedStatus: parseInt(e.target.value) || undefined })}
               />
             </div>
             <div className="space-y-2">

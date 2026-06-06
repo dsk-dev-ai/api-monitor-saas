@@ -1,24 +1,28 @@
 FROM node:20-alpine AS builder
 
 WORKDIR /app
-COPY package.json package-lock.json ./
-COPY frontend/package.json ./frontend/package.json
-RUN npm ci --workspace=api-monitor-frontend --include-workspace-root
 
-COPY frontend ./frontend
-WORKDIR /app/frontend
+# Use npm registry mirror for better connectivity
+RUN npm config set registry https://registry.npmmirror.com || true
+RUN npm config set fetch-retries 5
+RUN npm config set fetch-retry-mintimeout 20000
+RUN npm config set fetch-retry-maxtimeout 120000
+
+COPY package.json ./
+RUN npm install --prefer-offline --no-audit --no-fund
+
+COPY . .
 RUN npm run build
 
 FROM node:20-alpine AS runner
 
 WORKDIR /app
 ENV NODE_ENV=production
-ENV PORT=3000
-ENV HOSTNAME=0.0.0.0
 
-COPY --from=builder /app/frontend/.next/standalone ./
-COPY --from=builder /app/frontend/.next/static ./frontend/.next/static
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
 
 EXPOSE 3000
 
-CMD ["node", "frontend/server.js"]
+CMD ["node", "server.js"]
