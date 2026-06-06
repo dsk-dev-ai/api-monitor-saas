@@ -234,8 +234,22 @@ router.post('/', authMiddleware, asyncHandler(async (req, res) => {
 
   const monitor = await prisma.monitor.create({
     data: {
-      ...data,
-      userId,
+      name: data.name,
+      url: data.url,
+      method: data.method ?? 'GET',
+      headers: data.headers ?? {},
+      body: data.body,
+      interval: data.interval ?? 300,
+      timeout: data.timeout ?? 30,
+      expectedStatus: data.expectedStatus,
+      expectedKeyword: data.expectedKeyword,
+      region: data.region ?? 'global',
+
+      user: {
+        connect: {
+          id: userId,
+        },
+      },
     },
   });
 
@@ -372,7 +386,7 @@ router.get('/:id/checks', authMiddleware, asyncHandler(async (req, res) => {
     page,
     limit,
     totalPages: Math.ceil(total / limit),
-  }));
+  });
 }));
 
 export default router;

@@ -202,8 +202,8 @@ router.post('/webhook', express.raw({ type: 'application/json' }), asyncHandler(
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
-        const userId = session.subscription_data?.metadata?.userId;
-        const plan = session.subscription_data?.metadata?.plan;
+        const userId = session.metadata?.userId;
+        const plan = session.metadata?.plan;
 
         if (userId && session.subscription) {
           await prisma.subscription.update({
