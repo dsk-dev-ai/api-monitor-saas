@@ -15,7 +15,7 @@
 
 ---
 
-## 🚀 What's New in v1.0
+## 🚀 What's New in v1.2
 
 API Monitor SaaS v1.2 is a **complete rewrite** with production-grade architecture, featuring:
 
