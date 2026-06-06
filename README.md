@@ -1,10 +1,10 @@
 <div align="center">
 
-# 🔍 API Monitor SaaS v1.0
+# 🔍 API Monitor SaaS v1.2
 
 **Production-Ready API & Website Uptime Monitoring Platform**
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/dsk-dev-ai/api-monitor-saas/releases)
+[![Version](https://img.shields.io/badge/version-1.2.0-blue.svg)](https://github.com/dsk-dev-ai/api-monitor-saas/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen)](https://nodejs.org)
 [![Next.js](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org)
@@ -17,7 +17,7 @@
 
 ## 🚀 What's New in v1.0
 
-API Monitor SaaS v1.0 is a **complete rewrite** with production-grade architecture, featuring:
+API Monitor SaaS v1.2 is a **complete rewrite** with production-grade architecture, featuring:
 
 - ✅ **Real-time Dashboard** — Live uptime tracking with beautiful charts
 - ✅ **Advanced Analytics** — Response time percentiles, trends, distribution
@@ -178,10 +178,10 @@ git push origin feature/my-feature
 gh pr create --base develop
 
 # Release
-git checkout -b release/v1.1.0
+git checkout -b release/v1.2.0
 git checkout main
-git merge release/v1.1.0
-git tag -a v1.1.0 -m "Release v1.1.0"
+git merge release/v1.2.0
+git tag -a v1.2.0 -m "Release v1.2.0"
 git push origin main --tags
 ```
 
@@ -200,7 +200,7 @@ docker compose -f docker-compose.prod.yml logs -f
 docker compose -f docker-compose.prod.yml restart
 
 # Update
-./scripts/deploy.sh v1.0.0 production
+./scripts/deploy.sh v1.2.0 production
 ```
 
 ---
@@ -250,10 +250,10 @@ cd frontend && npm run build
 ## 📈 Roadmap
 
 - [x] v1.0 — MVP with monitoring, alerts, billing
-- [ ] v1.1 — Teams & organizations, Slack webhooks
-- [ ] v1.2 — API tokens, advanced analytics
-- [ ] v1.3 — Multi-region monitoring, PagerDuty
-- [ ] v2.0 — Kubernetes deployment, horizontal scaling
+- [x] v1.2 — Stabilization release, build fixes, Supabase compatibility, Prisma fixes
+- [ ] v1.3 — Teams & organizations, Slack webhooks
+- [ ] v1.4 — API tokens, advanced analytics
+- [ ] v2.0 — Multi-region monitoring, PagerDuty, horizontal scaling
 
 ---
 

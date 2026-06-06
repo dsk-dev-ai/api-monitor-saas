@@ -10,12 +10,32 @@ import { logger } from './utils/logger';
 const CHECK_INTERVAL = parseInt(process.env.CHECK_INTERVAL_SECONDS || '30');
 const CLEANUP_DAYS = parseInt(process.env.CLEANUP_DAYS || '90');
 
+interface Monitor {
+  id: string;
+  name: string;
+  url: string;
+  method: string;
+  headers: any;
+  body: string | null;
+  interval: number;
+  timeout: number;
+  expectedStatus: number | null;
+  expectedKeyword: string | null;
+  region: string;
+  userId: string;
+  isActive: boolean;
+  isPaused: boolean;
+  user: {
+    email: string;
+  };
+}
+
 // Track last known status to detect changes
 const lastStatusMap = new Map<string, string>();
 
 async function runChecks() {
   try {
-    logger.debug('Starting check cycle...');
+    logger.info('Starting check cycle...');
 
     // Fetch all active, non-paused monitors
     const monitors = await prisma.monitor.findMany({
@@ -34,7 +54,7 @@ async function runChecks() {
 
     // Group monitors by interval for efficiency
     const now = Date.now();
-    const monitorsToCheck = monitors.filter(m => {
+    const monitorsToCheck: Monitor[] = monitors.filter((m: Monitor) => {
       const lastCheck = lastStatusMap.get(`last_${m.id}`);
       if (!lastCheck) return true;
       return (now - parseInt(lastCheck)) >= m.interval * 1000;
@@ -46,7 +66,7 @@ async function runChecks() {
       const batch = monitorsToCheck.slice(i, i + BATCH_SIZE);
 
       await Promise.all(
-        batch.map(async (monitor) => {
+        batch.map(async (monitor: Monitor) => {
           try {
             const result = await executeCheck(
               monitor.url,
@@ -78,10 +98,10 @@ async function runChecks() {
             const currentStatus = result.status;
 
             if (previousStatus && previousStatus !== currentStatus) {
-              logger.info(`Status change detected for ${monitor.name}: ${previousStatus} -> ${currentStatus}`);
+              logger.info(`Status change for ${monitor.name}: ${previousStatus} -> ${currentStatus}`);
 
               // Create alert record
-              const alert = await prisma.alert.create({
+              await prisma.alert.create({
                 data: {
                   monitorId: monitor.id,
                   userId: monitor.userId,
@@ -129,8 +149,8 @@ async function runChecks() {
             // Store current status
             lastStatusMap.set(monitor.id, currentStatus);
 
-          } catch (error) {
-            logger.error(`Error checking monitor ${monitor.name}`, { error });
+          } catch (error: any) {
+            logger.error(`Error checking monitor ${monitor.name}`, { error: error.message });
           }
         })
       );
@@ -138,8 +158,8 @@ async function runChecks() {
 
     logger.info(`Check cycle completed. Processed ${monitorsToCheck.length} monitors`);
 
-  } catch (error) {
-    logger.error('Error in check cycle', { error });
+  } catch (error: any) {
+    logger.error('Error in check cycle', { error: error.message });
   }
 }
 
@@ -155,8 +175,8 @@ async function cleanupOldChecks() {
       },
     });
     logger.info(`Cleaned up ${deleted.count} old checks`);
-  } catch (error) {
-    logger.error('Error cleaning up old checks', { error });
+  } catch (error: any) {
+    logger.error('Error cleaning up old checks', { error: error.message });
   }
 }
 
@@ -173,14 +193,18 @@ async function main() {
     select: { monitorId: true, status: true },
   });
 
-  recentChecks.forEach(check => {
+  recentChecks.forEach((check: any) => {
     lastStatusMap.set(check.monitorId, check.status);
   });
 
   logger.info(`Loaded ${recentChecks.length} monitor statuses`);
 
-  // Schedule check runner
-  cron.schedule(`*/${Math.ceil(CHECK_INTERVAL / 60)} * * * * *`, runChecks);
+  // Schedule check runner - run every CHECK_INTERVAL seconds
+  const intervalSeconds = Math.max(CHECK_INTERVAL, 30);
+  logger.info(`Scheduling checks every ${intervalSeconds} seconds`);
+
+  // Use setInterval instead of cron for sub-minute intervals
+  setInterval(runChecks, intervalSeconds * 1000);
 
   // Schedule cleanup (daily at 3 AM)
   cron.schedule('0 3 * * *', cleanupOldChecks);
@@ -204,7 +228,7 @@ process.on('SIGINT', async () => {
   process.exit(0);
 });
 
-main().catch((error) => {
-  logger.error('Fatal error starting worker', { error });
+main().catch((error: any) => {
+  logger.error('Fatal error starting worker', { error: error.message });
   process.exit(1);
 });

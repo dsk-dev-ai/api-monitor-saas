@@ -1,13 +1,23 @@
 FROM node:20-alpine AS builder
 
 WORKDIR /app
-COPY package.json package-lock.json ./
-COPY backend/package.json ./backend/package.json
-RUN npm ci --workspace=api-monitor-backend --include-workspace-root
 
-COPY backend ./backend
-WORKDIR /app/backend
+# Use npm registry mirror for better connectivity
+RUN npm config set registry https://registry.npmmirror.com || true
+RUN npm config set fetch-retries 5
+RUN npm config set fetch-retry-mintimeout 20000
+RUN npm config set fetch-retry-maxtimeout 120000
+
+# Copy package.json and install deps
+COPY package.json ./
+RUN npm install --prefer-offline --no-audit --no-fund
+
+# Copy prisma schema and generate client BEFORE building
+COPY prisma ./prisma/
 RUN npx prisma generate
+
+# Copy source code and build
+COPY . .
 RUN npm run build
 
 FROM node:20-alpine AS runner
@@ -15,15 +25,17 @@ FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
-COPY package.json package-lock.json ./
-COPY backend/package.json ./backend/package.json
-RUN npm ci --omit=dev --workspace=api-monitor-backend --include-workspace-root
+RUN npm config set registry https://registry.npmmirror.com || true
 
-COPY --from=builder /app/backend/dist ./backend/dist
-COPY --from=builder /app/backend/prisma ./backend/prisma
+COPY package.json ./
+RUN npm install --omit=dev --prefer-offline --no-audit --no-fund
+
+# Copy built files and prisma client
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 
-WORKDIR /app/backend
+RUN npx prisma generate
 
 EXPOSE 3001
 

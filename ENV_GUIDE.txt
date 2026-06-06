@@ -1,0 +1,32 @@
+# ═══════════════════════════════════════════════════════════════
+# QUICK REFERENCE: Where to Get Each .env Value
+# ═══════════════════════════════════════════════════════════════
+#
+# Just open these URLs in your browser and copy the values:
+#
+# ┌─────────────────────────────────────────────────────────────┐
+# │ SERVICE          │ URL                                      │
+# ├─────────────────────────────────────────────────────────────┤
+# │ Supabase         │ https://supabase.com/dashboard           │
+# │   → Database URL │ Project → Database → Connection String   │
+# │   → API Keys     │ Project Settings → API                   │
+# ├─────────────────────────────────────────────────────────────┤
+# │ Stripe           │ https://dashboard.stripe.com             │
+# │   → API Keys     │ Developers → API Keys                    │
+# │   → Products     │ Products → Create Product → Copy Price ID│
+# │   → Webhooks     │ Developers → Webhooks → Add Endpoint     │
+# ├─────────────────────────────────────────────────────────────┤
+# │ Resend           │ https://resend.com                       │
+# │   → API Key      │ API Keys → Create                        │
+# │   → Domain       │ Domains → Add & Verify                   │
+# ├─────────────────────────────────────────────────────────────┤
+# │ JWT Secret       │ Generate yourself:                       │
+# │                  │ openssl rand -base64 48                  │
+# └─────────────────────────────────────────────────────────────┘
+#
+# After collecting all values:
+#   cp .env.example .env
+#   nano .env
+#   # Paste your values, save (Ctrl+O, Enter, Ctrl+X)
+#
+# ═══════════════════════════════════════════════════════════════

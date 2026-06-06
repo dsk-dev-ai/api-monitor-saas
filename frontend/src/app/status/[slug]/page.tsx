@@ -55,7 +55,6 @@ export default async function PublicStatusPage({ params }: { params: { slug: str
         {/* Header */}
         <div className="text-center">
           {page.logo && (
-            // eslint-disable-next-line @next/next/no-img-element
             <img src={page.logo} alt={page.name} className="mx-auto mb-4 h-16" />
           )}
           <h1 className="text-4xl font-bold">{page.name}</h1>

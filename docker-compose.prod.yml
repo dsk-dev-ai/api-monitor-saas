@@ -14,8 +14,8 @@ services:
 
   backend:
     build:
-      context: .
-      dockerfile: backend/Dockerfile
+      context: ./backend
+      dockerfile: Dockerfile
     environment:
       - NODE_ENV=production
       - PORT=3001
@@ -37,8 +37,8 @@ services:
 
   worker:
     build:
-      context: .
-      dockerfile: worker/Dockerfile
+      context: ./worker
+      dockerfile: Dockerfile
     environment:
       - NODE_ENV=production
       - DATABASE_URL=${DATABASE_URL}
@@ -54,8 +54,8 @@ services:
 
   frontend:
     build:
-      context: .
-      dockerfile: frontend/Dockerfile
+      context: ./frontend
+      dockerfile: Dockerfile
     environment:
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
       - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
