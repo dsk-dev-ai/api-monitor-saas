@@ -13,8 +13,7 @@
     "resolveJsonModule": true,
     "declaration": false,
     "sourceMap": true,
-    "ignoreDeprecations": "6.0",
-    "moduleResolution": "bundler",
+    "moduleResolution": "node",
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
