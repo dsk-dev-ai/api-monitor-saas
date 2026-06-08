@@ -137,7 +137,13 @@ export function MonitorForm({ onSubmit }: MonitorFormProps) {
                 type="number"
                 placeholder="200"
                 value={formData.expectedStatus}
-                onChange={(e) => setFormData({ ...formData, expectedStatus: parseInt(e.target.value) || 200 })}
+                onChange={(e) => {
+                  const status = parseInt(e.target.value, 10);
+                  setFormData({
+                    ...formData,
+                    expectedStatus: Number.isNaN(status) ? 0 : status,
+                  });
+                }}
               />
             </div>
             <div className="space-y-2">

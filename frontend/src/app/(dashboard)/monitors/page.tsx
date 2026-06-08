@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MonitorCard } from '@/components/monitors/monitor-card';
-import { MonitorForm } from '@/components/monitors/monitor-form';
+import { WizardContainer } from '@/components/monitors/wizard/wizard-container';
 import { useMonitors } from '@/hooks/use-monitors';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Monitor, Plus, RefreshCw } from 'lucide-react';
@@ -53,12 +53,13 @@ export default function MonitorsPage() {
       </div>
 
       {showForm && (
-        <MonitorForm
-          onSubmit={async (data) => {
+        <WizardContainer
+          onComplete={async (data) => {
             const result = await createMonitor(data);
             if (result.success) setShowForm(false);
             return result;
           }}
+          onCancel={() => setShowForm(false)}
         />
       )}
 

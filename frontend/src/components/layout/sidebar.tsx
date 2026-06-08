@@ -13,6 +13,8 @@ import {
   Shield,
   ChevronLeft,
   ChevronRight,
+  Users,
+  Folder,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -22,6 +24,8 @@ const navItems = [
   { href: '/analytics', label: 'Analytics', icon: Activity },
   { href: '/alerts', label: 'Alerts', icon: Bell },
   { href: '/billing', label: 'Billing', icon: CreditCard },
+  { href: '/team', label: 'Team', icon: Users },
+  { href: '/workspaces', label: 'Workspaces', icon: Folder },
   { href: '/settings', label: 'Settings', icon: Settings },
 ];
 

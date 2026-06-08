@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import Image from 'next/image';
 
 interface StatusPageData {
   name: string;
@@ -55,7 +56,7 @@ export default async function PublicStatusPage({ params }: { params: { slug: str
         {/* Header */}
         <div className="text-center">
           {page.logo && (
-            <img src={page.logo} alt={page.name} className="mx-auto mb-4 h-16" />
+            <Image src={page.logo} alt={page.name} className="mx-auto mb-4 h-16" width={200} height={60} />
           )}
           <h1 className="text-4xl font-bold">{page.name}</h1>
           {page.description && (
