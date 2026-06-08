@@ -45,3 +45,8 @@ coverage/
 # Misc
 *.pem
 *.key
+.blackboxcli/
+report *.md
+files.txt
+test.txt
+generate_report.sh
