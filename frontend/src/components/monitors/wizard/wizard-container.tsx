@@ -3,14 +3,12 @@ import { WizardStep, WizardSteps, MonitorWizardFormData } from './monitor-wizard
 import styles from './wizard-container.module.css';
 
 interface WizardContainerProps {
-  onComplete: (formData: MonitorWizardFormData) => void;
+  onComplete: (formData: MonitorWizardFormData) => Promise<{ success?: boolean; error?: string } | void>;
   onCancel: () => void;
 }
 
-export const WizardContainer: React.FC<WizardContainerProps> = ({ 
-  onComplete, 
-  onCancel 
-}) => {
+export const WizardContainer: React.FC<WizardContainerProps> = (props: WizardContainerProps) => {
+  const { onComplete, onCancel } = props;
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<MonitorWizardFormData>({
     name: '',
@@ -83,10 +81,13 @@ export const WizardContainer: React.FC<WizardContainerProps> = ({
     
     try {
       // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      onComplete(formData);
-    } catch (err) {
-      setError('Failed to create monitor. Please try again.');
+      const result = await onComplete(formData);
+
+      if (result && result.success === false) {
+        throw new Error(result.error || 'Failed to create monitor');
+      }
+    } catch (err: any) {
+      setError(err?.message || 'Failed to create monitor');
       console.error('Error creating monitor:', err);
     } finally {
       setIsSubmitting(false);
