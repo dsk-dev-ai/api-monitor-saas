@@ -54,3 +54,7 @@ generate_report.sh
 *.bak
 *.tsx.bak
 PROJECT_REPORT.md
+.backup/
+.backup-*/
+*.backup
+.backup

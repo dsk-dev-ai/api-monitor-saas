@@ -1,21 +1,33 @@
 {
   "name": "api-monitor-backend",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "API Monitor SaaS Backend API",
   "main": "dist/server.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
+
     "test": "jest --coverage",
     "test:watch": "jest --watch",
+    "test:unit": "jest",
+    "test:ci": "jest --runInBand",
+
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "db:seed": "ts-node src/utils/seed.ts",
+
     "lint": "eslint src/**/*.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+
+    "clean": "rm -rf dist",
+    "rebuild": "npm run clean && npm run build",
+
+    "health": "curl http://localhost:3001/health",
+
+    "verify": "npm run typecheck && npm run build && npm run test"
   },
   "dependencies": {
     "@prisma/client": "5.22.0",
