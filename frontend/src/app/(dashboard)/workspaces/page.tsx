@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -201,12 +201,11 @@ export default function WorkspacesPage() {
     }
   };
 
-  // Initial fetch
-  // Note: In a real app, you would use useEffect here, but for simplicity in this example,
-  // we're calling it directly. In practice, you'd want to use useEffect with proper dependencies.
-  fetchWorkspaces();
-
   // Mock data for development
+  useEffect(() => {
+    fetchWorkspaces();
+  }, []);
+  
   const mockWorkspaces: Workspace[] = [
     {
       id: 'ws_1',

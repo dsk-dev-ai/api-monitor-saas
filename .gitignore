@@ -50,3 +50,7 @@ report *.md
 files.txt
 test.txt
 generate_report.sh
+.bak
+*.bak
+*.tsx.bak
+PROJECT_REPORT.md

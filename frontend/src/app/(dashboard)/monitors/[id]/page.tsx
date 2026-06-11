@@ -42,7 +42,15 @@ export default function MonitorDetailPage() {
   if (error) return <div className="text-destructive">{error}</div>;
   if (!monitor) return null;
 
-  const status = monitor.isPaused ? 'paused' : monitor.lastCheck?.status || 'unknown';
+  const latestCheck =
+    Array.isArray(monitor.checks) && monitor.checks.length > 0
+      ? monitor.checks[0]
+      : null;
+
+  const status =
+    monitor.isPaused
+      ? 'paused'
+      : latestCheck?.status || 'unknown';
 
   return (
     <div className="space-y-6">
