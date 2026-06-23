@@ -1,4 +1,4 @@
-# API Monitor SaaS v1.0 — Complete Ubuntu 24.04 Development Plan
+# API Monitor SaaS v2.0 — Complete Ubuntu 24.04 Development Plan
 ## From Zero to Production-Ready MVP
 
 ---

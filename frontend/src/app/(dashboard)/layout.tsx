@@ -2,35 +2,62 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { DashboardShell } from '@/components/layout/shell';
-import { useAuth } from '@/hooks/use-auth';
 import { Loader2 } from 'lucide-react';
 
+import { DashboardShell } from '@/components/layout/shell';
+import { useAuth } from '@/hooks/use-auth';
+import { useAuthStore } from '@/stores/auth-store';
+
 export default function DashboardLayout({
-  children,
+children,
 }: {
-  children: React.ReactNode;
+children: React.ReactNode;
 }) {
-  const router = useRouter();
-  const { isAuthenticated, isLoading } = useAuth();
+const router = useRouter();
 
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push('/login');
-    }
-  }, [isLoading, isAuthenticated, router]);
+// Call useAuth for any side-effects it performs (it doesn't return values)
+const { checkAuth } = useAuth();
 
-  if (isLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
+useEffect(() => {
+  checkAuth();
+}, [checkAuth]);
 
-  if (!isAuthenticated) {
-    return null;
-  }
+const {
+	isAuthenticated,
+	isLoading,
+} = useAuthStore();
 
-  return <DashboardShell>{children}</DashboardShell>;
+const { isInitialized } = useAuthStore();
+
+// Redirect unauthenticated users
+useEffect(() => {
+if (
+isInitialized &&
+!isLoading &&
+!isAuthenticated
+) {
+router.replace('/login');
+}
+}, [
+isInitialized,
+isLoading,
+isAuthenticated,
+router,
+]);
+
+// Initial auth check
+if (!isInitialized || isLoading) {
+return ( <div className="flex h-screen items-center justify-center"> <Loader2 className="h-8 w-8 animate-spin text-primary" /> </div>
+);
+}
+
+// Redirecting
+if (!isAuthenticated) {
+return ( <div className="flex h-screen items-center justify-center"> <Loader2 className="h-8 w-8 animate-spin text-primary" /> </div>
+);
+}
+
+return ( <DashboardShell>
+{children} </DashboardShell>
+);
 }

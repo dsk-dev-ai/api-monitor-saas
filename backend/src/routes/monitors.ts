@@ -186,8 +186,13 @@ router.get('/:id', authMiddleware, asyncHandler(async (req, res) => {
 
   res.json({
     ...monitor,
+    lastCheck: monitor.checks?.[0] || null,
+
     stats: {
-      uptime: totalChecks > 0 ? Math.round((upChecks / totalChecks) * 10000) / 100 : 100,
+      uptime: totalChecks > 0
+        ? Math.round((upChecks / totalChecks) * 10000) / 100
+        : 100,
+
       avgResponseTime: Math.round(avgResponseTime._avg.responseTime || 0),
       maxResponseTime: maxResponseTime._max.responseTime || 0,
       minResponseTime: minResponseTime._min.responseTime || 0,
@@ -197,6 +202,7 @@ router.get('/:id', authMiddleware, asyncHandler(async (req, res) => {
       degradedChecks,
       percentiles: percentiles[0] || null,
     },
+    
     dailyStats,
   });
 }));

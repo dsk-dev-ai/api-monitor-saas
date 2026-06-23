@@ -34,7 +34,7 @@ services:
     environment:
       - NODE_ENV=development
       - PORT=3001
-      - DATABASE_URL=postgresql://api_monitor:dev_password@postgres:5432/api_monitor
+      - DATABASE_URL=${DATABASE_URL}
       - REDIS_URL=redis://redis:6379
       - SUPABASE_URL=${SUPABASE_URL}
       - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
@@ -61,7 +61,7 @@ services:
       dockerfile: Dockerfile
     environment:
       - NODE_ENV=development
-      - DATABASE_URL=postgresql://api_monitor:dev_password@postgres:5432/api_monitor
+      - DATABASE_URL=${DATABASE_URL}
       - REDIS_URL=redis://redis:6379
       - CHECK_INTERVAL_SECONDS=30
       - RESEND_API_KEY=${RESEND_API_KEY}
@@ -90,8 +90,6 @@ services:
       - backend
     volumes:
       - ./frontend:/app
-      - /app/node_modules
-      - /app/.next
     command: npm run dev
 
 volumes:

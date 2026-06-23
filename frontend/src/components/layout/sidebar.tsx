@@ -13,15 +13,19 @@ import {
   Shield,
   ChevronLeft,
   ChevronRight,
+  Users,
+  Folder,
 } from 'lucide-react';
 import { useState } from 'react';
 
 const navItems = [
-  { href: '/', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/monitors', label: 'Monitors', icon: Monitor },
   { href: '/analytics', label: 'Analytics', icon: Activity },
   { href: '/alerts', label: 'Alerts', icon: Bell },
   { href: '/billing', label: 'Billing', icon: CreditCard },
+  { href: '/team', label: 'Team', icon: Users },
+  { href: '/workspaces', label: 'Workspaces', icon: Folder },
   { href: '/settings', label: 'Settings', icon: Settings },
 ];
 
@@ -39,7 +43,7 @@ export function Sidebar() {
       <div className="flex h-full flex-col">
         {/* Logo */}
         <div className="flex h-16 items-center justify-between border-b px-4">
-          <Link href="/" className="flex items-center gap-2">
+          <Link href="/dashboard" className="flex items-center gap-2">
             <Shield className="h-6 w-6 text-primary" />
             {!collapsed && (
               <span className="text-lg font-bold">API Monitor</span>
@@ -86,7 +90,7 @@ export function Sidebar() {
         {/* Footer */}
         <div className="border-t p-3">
           <div className={cn('text-xs text-muted-foreground', collapsed && 'text-center')}>
-            {!collapsed && 'v1.0.0'}
+            {!collapsed && 'v2.0.0-enterprise'}
           </div>
         </div>
       </div>

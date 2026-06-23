@@ -8,7 +8,10 @@ const router = Router();
 
 const signupSchema = z.object({
   email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  password: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .max(128, 'Password is too long'),
   name: z.string().min(1, 'Name is required').optional(),
 });
 
@@ -31,16 +34,22 @@ router.post('/signup', asyncHandler(async (req, res) => {
   });
 
   if (error) {
+    console.log('SUPABASE SIGNUP ERROR:', error);
     throw new AppError(error.message, 400);
-  }
+  }  
 
   if (data.user) {
     await prisma.user.upsert({
       where: { id: data.user.id },
-      update: { email, name: name || email.split('@')[0] },
+      update: {
+        email,
+        username: email.split('@')[0].toLowerCase(),
+        name: name || email.split('@')[0],
+      },
       create: {
         id: data.user.id,
         email,
+        username: email.split('@')[0].toLowerCase(),
         name: name || email.split('@')[0],
       },
     });
@@ -76,7 +85,21 @@ router.post('/signin', asyncHandler(async (req, res) => {
   });
 
   if (error) {
-    throw new AppError(error.message, 401);
+    throw new AppError(
+      'Invalid email or password',
+      401
+    );
+  }
+
+  if (data.user?.id) {
+    await prisma.user.update({
+      where: {
+        id: data.user.id,
+      },
+      data: {
+        lastLoginAt: new Date(),
+      },
+    });
   }
 
   res.json({
@@ -179,7 +202,7 @@ router.post('/reset-password', asyncHandler(async (req, res) => {
 // Update password
 router.post('/update-password', asyncHandler(async (req, res) => {
   const { password } = z.object({
-    password: z.string().min(6),
+    password: z.string().min(8).max(128),
   }).parse(req.body);
 
   const authHeader = req.headers.authorization;

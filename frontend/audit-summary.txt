@@ -1,0 +1,109 @@
+=== TYPESCRIPT ===
+.next/types/app/(dashboard)/analytics/overview/page.ts(2,24): error TS2306: File '/home/dsk/Projects/api-monitor-saas-v1/frontend/src/app/(dashboard)/analytics/overview/page.tsx' is not a module.
+.next/types/app/(dashboard)/analytics/overview/page.ts(5,29): error TS2306: File '/home/dsk/Projects/api-monitor-saas-v1/frontend/src/app/(dashboard)/analytics/overview/page.tsx' is not a module.
+src/app/(dashboard)/team/page.tsx(302,12): error TS2365: Operator '<' cannot be applied to types 'boolean' and 'number'.
+src/app/(dashboard)/team/page.tsx(438,32): error TS2367: This comparison appears to be unintentional because the types '"admin" | "member"' and '"owner"' have no overlap.
+src/app/(dashboard)/workspaces/page.tsx(90,23): error TS2345: Argument of type '(prev: Workspace[]) => { isActive: boolean; memberCount: number; monitorCount: number; createdAt: string; updatedAt: string; ownerId: string; id: string; name?: string | undefined; description?: string | ... 1 more ... | undefined; }[]' is not assignable to parameter of type 'SetStateAction<Workspace[]>'.
+  Type '(prev: Workspace[]) => { isActive: boolean; memberCount: number; monitorCount: number; createdAt: string; updatedAt: string; ownerId: string; id: string; name?: string | undefined; description?: string | ... 1 more ... | undefined; }[]' is not assignable to type '(prevState: Workspace[]) => Workspace[]'.
+    Type '{ isActive: boolean; memberCount: number; monitorCount: number; createdAt: string; updatedAt: string; ownerId: string; id: string; name?: string | undefined; description?: string | null | undefined; }[]' is not assignable to type 'Workspace[]'.
+      Type '{ isActive: boolean; memberCount: number; monitorCount: number; createdAt: string; updatedAt: string; ownerId: string; id: string; name?: string | undefined; description?: string | null | undefined; }' is not assignable to type 'Workspace'.
+        Types of property 'name' are incompatible.
+          Type 'string | undefined' is not assignable to type 'string'.
+            Type 'undefined' is not assignable to type 'string'.
+src/app/(dashboard)/workspaces/page.tsx(146,31): error TS2345: Argument of type 'Workspace | null | undefined' is not assignable to parameter of type 'SetStateAction<Workspace | null>'.
+  Type 'undefined' is not assignable to type 'SetStateAction<Workspace | null>'.
+src/app/(dashboard)/workspaces/page.tsx(154,31): error TS2345: Argument of type 'Workspace | null | undefined' is not assignable to parameter of type 'SetStateAction<Workspace | null>'.
+  Type 'undefined' is not assignable to type 'SetStateAction<Workspace | null>'.
+src/app/(dashboard)/workspaces/page.tsx(341,11): error TS2322: Type '(data: { name: string; description: string; isActive: boolean; }) => Promise<{ success: boolean; data: any; error?: undefined; } | { success: boolean; error: any; data?: undefined; }>' is not assignable to type '(data: { name: string; description: string; isActive: boolean; }) => Promise<{ success: true; data: any; } | { success: false; error: string; }>'.
+  Type 'Promise<{ success: boolean; data: any; error?: undefined; } | { success: boolean; error: any; data?: undefined; }>' is not assignable to type 'Promise<{ success: true; data: any; } | { success: false; error: string; }>'.
+    Type '{ success: boolean; data: any; error?: undefined; } | { success: boolean; error: any; data?: undefined; }' is not assignable to type '{ success: true; data: any; } | { success: false; error: string; }'.
+      Type '{ success: boolean; data: any; error?: undefined; }' is not assignable to type '{ success: true; data: any; } | { success: false; error: string; }'.
+        Type '{ success: boolean; data: any; error?: undefined; }' is not assignable to type '{ success: false; error: string; }'.
+          Types of property 'success' are incompatible.
+            Type 'boolean' is not assignable to type 'false'.
+src/app/(marketing)/docs/page.tsx(146,20): error TS2322: Type '{ children: string; class: string; }' is not assignable to type 'DetailedHTMLProps<HTMLAttributes<HTMLParagraphElement>, HTMLParagraphElement>'.
+  Property 'class' does not exist on type 'DetailedHTMLProps<HTMLAttributes<HTMLParagraphElement>, HTMLParagraphElement>'. Did you mean 'className'?
+src/app/(marketing)/docs/page.tsx(147,21): error TS2322: Type '{ children: Element[]; class: string; }' is not assignable to type 'DetailedHTMLProps<HTMLAttributes<HTMLUListElement>, HTMLUListElement>'.
+  Property 'class' does not exist on type 'DetailedHTMLProps<HTMLAttributes<HTMLUListElement>, HTMLUListElement>'. Did you mean 'className'?
+src/app/(marketing)/docs/page.tsx(153,20): error TS2322: Type '{ children: string; class: string; }' is not assignable to type 'DetailedHTMLProps<HTMLAttributes<HTMLParagraphElement>, HTMLParagraphElement>'.
+  Property 'class' does not exist on type 'DetailedHTMLProps<HTMLAttributes<HTMLParagraphElement>, HTMLParagraphElement>'. Did you mean 'className'?
+src/app/(marketing)/docs/page.tsx(156,20): error TS2322: Type '{ children: string; class: string; }' is not assignable to type 'DetailedHTMLProps<HTMLAttributes<HTMLParagraphElement>, HTMLParagraphElement>'.
+  Property 'class' does not exist on type 'DetailedHTMLProps<HTMLAttributes<HTMLParagraphElement>, HTMLParagraphElement>'. Did you mean 'className'?
+src/app/(marketing)/docs/page.tsx(157,21): error TS2322: Type '{ children: Element[]; class: string; }' is not assignable to type 'DetailedHTMLProps<HTMLAttributes<HTMLUListElement>, HTMLUListElement>'.
+  Property 'class' does not exist on type 'DetailedHTMLProps<HTMLAttributes<HTMLUListElement>, HTMLUListElement>'. Did you mean 'className'?
+src/app/(marketing)/docs/page.tsx(189,22): error TS2322: Type '{ children: (string | Element)[]; class: string; }' is not assignable to type 'DetailedHTMLProps<HTMLAttributes<HTMLParagraphElement>, HTMLParagraphElement>'.
+  Property 'class' does not exist on type 'DetailedHTMLProps<HTMLAttributes<HTMLParagraphElement>, HTMLParagraphElement>'. Did you mean 'className'?
+src/app/(marketing)/docs/page.tsx(206,22): error TS2322: Type '{ children: (string | Element)[]; class: string; }' is not assignable to type 'DetailedHTMLProps<HTMLAttributes<HTMLParagraphElement>, HTMLParagraphElement>'.
+  Property 'class' does not exist on type 'DetailedHTMLProps<HTMLAttributes<HTMLParagraphElement>, HTMLParagraphElement>'. Did you mean 'className'?
+src/app/(marketing)/docs/page.tsx(225,22): error TS2322: Type '{ children: (string | Element)[]; class: string; }' is not assignable to type 'DetailedHTMLProps<HTMLAttributes<HTMLParagraphElement>, HTMLParagraphElement>'.
+  Property 'class' does not exist on type 'DetailedHTMLProps<HTMLAttributes<HTMLParagraphElement>, HTMLParagraphElement>'. Did you mean 'className'?
+src/app/(marketing)/docs/page.tsx(242,22): error TS2322: Type '{ children: (string | Element)[]; class: string; }' is not assignable to type 'DetailedHTMLProps<HTMLAttributes<HTMLParagraphElement>, HTMLParagraphElement>'.
+  Property 'class' does not exist on type 'DetailedHTMLProps<HTMLAttributes<HTMLParagraphElement>, HTMLParagraphElement>'. Did you mean 'className'?
+src/app/(marketing)/page.tsx(2,47): error TS2307: Cannot find module 'framer-motion' or its corresponding type declarations.
+src/components/monitors/monitor-form.tsx(140,61): error TS2322: Type 'number | undefined' is not assignable to type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+src/components/monitors/wizard/advanced-settings-step.tsx(14,32): error TS2339: Property 'checked' does not exist on type '(EventTarget & HTMLInputElement) | (EventTarget & HTMLTextAreaElement)'.
+src/components/monitors/wizard/advanced-settings-step.tsx(14,32): error TS2339: Property 'checked' does not exist on type 'EventTarget & (HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement)'.
+src/components/monitors/wizard/advanced-settings-step.tsx(22,7): error TS2322: Type 'string' is not assignable to type '"none" | "basic" | "bearer" | "api-key" | undefined'.
+src/components/monitors/wizard/advanced-settings-step.tsx(152,13): error TS2322: Type 'string' is not assignable to type 'number'.
+src/components/monitors/wizard/advanced-settings-step.tsx(173,13): error TS2322: Type 'string' is not assignable to type 'number'.
+src/components/monitors/wizard/index.ts(2,10): error TS1205: Re-exporting a type when 'isolatedModules' is enabled requires using 'export type'.
+src/components/monitors/wizard/index.ts(2,35): error TS1205: Re-exporting a type when 'isolatedModules' is enabled requires using 'export type'.
+src/components/monitors/wizard/review-step.tsx(140,41): error TS5076: '??' and '&&' operations cannot be mixed without parentheses.
+src/components/monitors/wizard/review-step.tsx(141,39): error TS5076: '??' and '&&' operations cannot be mixed without parentheses.
+src/components/monitors/wizard/review-step.tsx(142,45): error TS5076: '??' and '&&' operations cannot be mixed without parentheses.
+src/components/workspaces/workspace-card.tsx(74,15): error TS17001: JSX elements cannot have multiple attributes with the same name.
+
+=== BUILD ===
+
+> api-monitor-frontend@1.0.0 build
+> next build
+
+   ▲ Next.js 14.0.4
+   - Environments: .env.local
+
+   Creating an optimized production build ...
+ ⚠ Compiled with warnings
+
+./src/components/monitors/wizard/index.ts
+export 'WizardStep' (reexported as 'WizardStep') was not found in './monitor-wizard' (possible exports: WizardSteps)
+
+Import trace for requested module:
+./src/components/monitors/wizard/index.ts
+./src/app/(dashboard)/monitors/create/page.tsx
+
+./src/components/monitors/wizard/index.ts
+export 'MonitorWizardFormData' (reexported as 'MonitorWizardFormData') was not found in './monitor-wizard' (possible exports: WizardSteps)
+
+Import trace for requested module:
+./src/components/monitors/wizard/index.ts
+./src/app/(dashboard)/monitors/create/page.tsx
+
+./src/components/monitors/wizard/index.ts
+export 'WizardStep' (reexported as 'WizardStep') was not found in './monitor-wizard' (possible exports: WizardSteps)
+
+Import trace for requested module:
+./src/components/monitors/wizard/index.ts
+./src/app/(dashboard)/monitors/create/page.tsx
+
+./src/components/monitors/wizard/index.ts
+export 'MonitorWizardFormData' (reexported as 'MonitorWizardFormData') was not found in './monitor-wizard' (possible exports: WizardSteps)
+
+Import trace for requested module:
+./src/components/monitors/wizard/index.ts
+./src/app/(dashboard)/monitors/create/page.tsx
+
+   Linting and checking validity of types ...
+ ⨯ ESLint: Failed to load parser './parser.js' declared in '.eslintrc.json » eslint-config-next/core-web-vitals » /home/dsk/Projects/api-monitor-saas-v1/node_modules/eslint-config-next/index.js': Cannot find module 'next/dist/compiled/babel/eslint-parser' Require stack: - /home/dsk/Projects/api-monitor-saas-v1/node_modules/eslint-config-next/parser.js - /home/dsk/Projects/api-monitor-saas-v1/node_modules/@eslint/eslintrc/dist/eslintrc.cjs
+Failed to compile.
+
+src/app/(dashboard)/analytics/overview/page.tsx
+Type error: File '/home/dsk/Projects/api-monitor-saas-v1/frontend/src/app/(dashboard)/analytics/overview/page.tsx' is not a module.
+
+npm error Lifecycle script `build` failed with error:
+npm error code 1
+npm error path /home/dsk/Projects/api-monitor-saas-v1/frontend
+npm error workspace api-monitor-frontend@1.0.0
+npm error location /home/dsk/Projects/api-monitor-saas-v1/frontend
+npm error command failed
+npm error command sh -c next build

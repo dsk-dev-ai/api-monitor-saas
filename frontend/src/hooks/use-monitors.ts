@@ -37,11 +37,20 @@ export function useMonitors() {
   const fetchMonitors = useCallback(async () => {
     try {
       setIsLoading(true);
+
       const { data } = await api.get('/monitors');
-      setMonitors(data.monitors || []);
+
+      setMonitors(data?.monitors || []);
       setError(null);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to fetch monitors');
+      console.error('FETCH MONITORS FAILED');
+      console.error(err);
+
+      setError(
+        err?.response?.data?.error ||
+          err?.message ||
+          'Failed to fetch monitors'
+      );
     } finally {
       setIsLoading(false);
     }
@@ -49,47 +58,127 @@ export function useMonitors() {
 
   useEffect(() => {
     fetchMonitors();
-    const interval = setInterval(fetchMonitors, 30000);
-    return () => clearInterval(interval);
+
+    const timer = setInterval(fetchMonitors, 30000);
+
+    return () => clearInterval(timer);
   }, [fetchMonitors]);
 
-  const createMonitor = async (monitorData: Partial<Monitor>) => {
+  const createMonitor = async (monitorData: any) => {
     try {
-      const { data } = await api.post('/monitors', monitorData);
-      setMonitors((prev) => [data, ...prev]);
-      return { success: true, data };
+      console.log('====================');
+      console.log('CREATING MONITOR');
+      console.log(monitorData);
+
+      const response = await api.post(
+        '/monitors',
+        monitorData
+      );
+
+      console.log('MONITOR CREATED');
+      console.log(response.data);
+
+      setMonitors((prev) => [
+        response.data,
+        ...prev,
+      ]);
+
+      return {
+        success: true,
+        data: response.data,
+      };
     } catch (err: any) {
-      return { success: false, error: err.response?.data?.error || 'Failed to create monitor' };
+      console.error('====================');
+      console.error('CREATE MONITOR FAILED');
+      console.error(err);
+      console.error(err?.response?.data);
+
+      return {
+        success: false,
+        error:
+          err?.response?.data?.error ||
+          err?.response?.data?.message ||
+          err?.message ||
+          'Failed to create monitor',
+      };
     }
   };
 
   const deleteMonitor = async (id: string) => {
     try {
       await api.delete(`/monitors/${id}`);
-      setMonitors((prev) => prev.filter((m) => m.id !== id));
+
+      setMonitors((prev) =>
+        prev.filter((m) => m.id !== id)
+      );
+
       return { success: true };
     } catch (err: any) {
-      return { success: false, error: err.response?.data?.error || 'Failed to delete monitor' };
+      console.error('DELETE MONITOR FAILED', err);
+
+      return {
+        success: false,
+        error:
+          err?.response?.data?.error ||
+          err?.message ||
+          'Failed to delete monitor',
+      };
     }
   };
 
   const pauseMonitor = async (id: string) => {
     try {
-      const { data } = await api.post(`/monitors/${id}/pause`);
-      setMonitors((prev) => prev.map((m) => (m.id === id ? { ...m, ...data } : m)));
+      const { data } = await api.post(
+        `/monitors/${id}/pause`
+      );
+
+      setMonitors((prev) =>
+        prev.map((m) =>
+          m.id === id
+            ? { ...m, ...data }
+            : m
+        )
+      );
+
       return { success: true };
     } catch (err: any) {
-      return { success: false, error: err.response?.data?.error };
+      console.error('PAUSE MONITOR FAILED', err);
+
+      return {
+        success: false,
+        error:
+          err?.response?.data?.error ||
+          err?.message ||
+          'Failed to pause monitor',
+      };
     }
   };
 
   const resumeMonitor = async (id: string) => {
     try {
-      const { data } = await api.post(`/monitors/${id}/resume`);
-      setMonitors((prev) => prev.map((m) => (m.id === id ? { ...m, ...data } : m)));
+      const { data } = await api.post(
+        `/monitors/${id}/resume`
+      );
+
+      setMonitors((prev) =>
+        prev.map((m) =>
+          m.id === id
+            ? { ...m, ...data }
+            : m
+        )
+      );
+
       return { success: true };
     } catch (err: any) {
-      return { success: false, error: err.response?.data?.error };
+      console.error('RESUME MONITOR FAILED', err);
+
+      return {
+        success: false,
+        error:
+          err?.response?.data?.error ||
+          err?.message ||
+          'Failed to resume monitor',
+      };
     }
   };
 

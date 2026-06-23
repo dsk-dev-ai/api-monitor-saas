@@ -21,7 +21,7 @@ jest.mock('../config/database', () => ({
 }));
 
 // Import the service after setting up the mock
-const { checkService } = require('./check');
+import { checkService } from './check';
 
 describe('Check Service', () => {
   beforeEach(() => {
@@ -30,12 +30,6 @@ describe('Check Service', () => {
 
   describe('executeCheck', () => {
     it('should return up status for successful request', async () => {
-      // Mock axios response
-      const mockResponse = {
-        status: 200,
-        data: 'OK',
-      };
-
       // We would normally mock axios here, but for simplicity,
       // we'll test the service logic directly
       expect(true).toBe(true);

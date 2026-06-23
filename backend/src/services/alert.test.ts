@@ -18,7 +18,7 @@ jest.mock('../config/database', () => ({
 }));
 
 // Import the service after setting up the mock
-const { alertService } = require('./alert');
+import { alertService } from './alert';
 
 describe('Alert Service', () => {
   beforeEach(() => {

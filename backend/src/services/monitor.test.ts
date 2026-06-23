@@ -36,7 +36,7 @@ jest.mock('../config/database', () => ({
 }));
 
 // Import the service after setting up the mock
-const { monitorService } = require('./monitor');
+import { monitorService } from './monitor';
 
 describe('Monitor Service', () => {
   beforeEach(() => {

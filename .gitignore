@@ -45,3 +45,17 @@ coverage/
 # Misc
 *.pem
 *.key
+.blackboxcli/
+report *.md
+files.txt
+test.txt
+generate_report.sh
+.bak
+*.bak
+*.tsx.bak
+PROJECT_REPORT.md
+.backup/
+.backup-*/
+*.backup
+.backup
+release-evidence/videos/

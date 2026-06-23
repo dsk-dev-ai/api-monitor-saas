@@ -17,7 +17,7 @@ export const errorHandler = (
   err: Error | AppError,
   req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction
 ) => {
   if (err instanceof AppError) {
     logger.warn(`Operational error: ${err.message}`, {
@@ -50,8 +50,8 @@ export const notFound = (req: Request, res: Response) => {
   res.status(404).json({ error: `Route ${req.originalUrl} not found` });
 };
 
-export const asyncHandler = (fn: Function) => {
-  return (req: Request, res: Response, next: NextFunction) => {
-    Promise.resolve(fn(req, res, next)).catch(next);
+export const asyncHandler = (_fn: Function) => {
+  return (_req: Request, _res: Response, _next: NextFunction) => {
+    Promise.resolve(_fn(_req, _res, _next)).catch(_next);
   };
 };

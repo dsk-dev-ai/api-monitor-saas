@@ -1,10 +1,10 @@
 <div align="center">
 
-# 🔍 API Monitor SaaS v1.2
+# 🔍 API Monitor SaaS v2.0
 
 **Production-Ready API & Website Uptime Monitoring Platform**
 
-[![Version](https://img.shields.io/badge/version-1.2.0-blue.svg)](https://github.com/dsk-dev-ai/api-monitor-saas/releases)
+[![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](https://github.com/dsk-dev-ai/api-monitor-saas/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen)](https://nodejs.org)
 [![Next.js](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org)
@@ -15,17 +15,16 @@
 
 ---
 
-## 🚀 What's New in v1.2
+## 🚀 What's New in v2.0
 
-API Monitor SaaS v1.2 is a **complete rewrite** with production-grade architecture, featuring:
+API Monitor SaaS v2.0 is a **major release** featuring:
 
-- ✅ **Real-time Dashboard** — Live uptime tracking with beautiful charts
-- ✅ **Advanced Analytics** — Response time percentiles, trends, distribution
-- ✅ **Smart Alerting** — Email notifications with status change detection
-- ✅ **Stripe Billing** — Free, Basic ($9/mo), Pro ($29/mo) plans
-- ✅ **Public Status Pages** — Shareable status pages for your monitors
-- ✅ **Docker Deployment** — One-command production deploy
-- ✅ **Ubuntu 24.04 Ready** — Complete server setup guide
+- ✅ **Authentication** — Secure user authentication system
+- ✅ **Dashboard** — Real-time monitoring dashboard
+- ✅ **Monitor Management** — Create, edit, and delete monitors
+- ✅ **Analytics** — Response time tracking and visualization
+- ✅ **Alerts** — Email notifications for status changes
+- ✅ **Worker Service** — Background monitoring service
 
 ---
 
@@ -178,10 +177,10 @@ git push origin feature/my-feature
 gh pr create --base develop
 
 # Release
-git checkout -b release/v1.2.0
+git checkout -b release/v2.0.0
 git checkout main
-git merge release/v1.2.0
-git tag -a v1.2.0 -m "Release v1.2.0"
+git merge release/v2.0.0
+git tag -a v2.0.0 -m "Release v2.0.0"
 git push origin main --tags
 ```
 
@@ -200,7 +199,7 @@ docker compose -f docker-compose.prod.yml logs -f
 docker compose -f docker-compose.prod.yml restart
 
 # Update
-./scripts/deploy.sh v1.2.0 production
+./scripts/deploy.sh v2.0.0 production
 ```
 
 ---
@@ -240,9 +239,6 @@ cd backend && npm test
 
 # Frontend build check
 cd frontend && npm run build
-
-# E2E tests (coming in v1.1)
-# cd frontend && npx playwright test
 ```
 
 ---
@@ -251,9 +247,9 @@ cd frontend && npm run build
 
 - [x] v1.0 — MVP with monitoring, alerts, billing
 - [x] v1.2 — Stabilization release, build fixes, Supabase compatibility, Prisma fixes
-- [ ] v1.3 — Teams & organizations, Slack webhooks
-- [ ] v1.4 — API tokens, advanced analytics
-- [ ] v2.0 — Multi-region monitoring, PagerDuty, horizontal scaling
+- [x] v2.0 — Authentication, Monitor Management, Analytics Dashboard, Alert System, Worker Service
+- [ ] v2.1 — Team Workspaces, Public Status Pages, Stripe Billing
+- [ ] v3.0 — Multi-region Monitoring, Incident Management, Advanced Reporting
 
 ---
 

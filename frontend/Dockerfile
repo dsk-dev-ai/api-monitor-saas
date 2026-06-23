@@ -1,15 +1,8 @@
 FROM node:20-alpine AS builder
 
 WORKDIR /app
-
-# Use npm registry mirror for better connectivity
-RUN npm config set registry https://registry.npmmirror.com || true
-RUN npm config set fetch-retries 5
-RUN npm config set fetch-retry-mintimeout 20000
-RUN npm config set fetch-retry-maxtimeout 120000
-
 COPY package.json ./
-RUN npm install --prefer-offline --no-audit --no-fund
+RUN npm install
 
 COPY . .
 RUN npm run build

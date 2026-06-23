@@ -2,43 +2,75 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 interface User {
-  id: string;
-  email: string;
-  name?: string | null;
-  avatar?: string | null;
-  subscription?: {
-    plan: string;
-    status: string;
-  };
-  monitorCount?: number;
+id: string;
+email: string;
+name?: string | null;
+avatar?: string | null;
+subscription?: {
+plan: string;
+status: string;
+};
+monitorCount?: number;
 }
 
 interface AuthState {
-  user: User | null;
-  isLoading: boolean;
-  isAuthenticated: boolean;
-  setUser: (user: User | null) => void;
-  setLoading: (loading: boolean) => void;
-  logout: () => void;
+user: User | null;
+isLoading: boolean;
+isAuthenticated: boolean;
+isInitialized: boolean;
+
+setUser: (user: User | null) => void;
+setLoading: (loading: boolean) => void;
+setInitialized: (initialized: boolean) => void;
+
+logout: () => void;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
       user: null,
-      isLoading: true,
+      isLoading: false,
       isAuthenticated: false,
-      setUser: (user) => set({ user, isAuthenticated: !!user, isLoading: false }),
-      setLoading: (loading) => set({ isLoading: loading }),
+      isInitialized: false,
+
+      setUser: (user) =>
+        set({
+          user,
+          isAuthenticated: !!user,
+          isLoading: false,
+          isInitialized: true,
+        }),
+
+      setLoading: (loading) =>
+        set({
+          isLoading: loading,
+        }),
+
+      setInitialized: (initialized) =>
+        set({
+          isInitialized: initialized,
+        }),
+
       logout: () => {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        set({ user: null, isAuthenticated: false, isLoading: false });
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('refresh_token');
+        }
+
+        set({
+          user: null,
+          isAuthenticated: false,
+          isLoading: false,
+          isInitialized: true,
+        });
       },
     }),
     {
       name: 'auth-storage',
-      partialize: (state) => ({ user: state.user }),
+      partialize: (state) => ({
+        user: state.user,
+      }),
     }
   )
 );

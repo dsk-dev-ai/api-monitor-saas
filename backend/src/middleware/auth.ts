@@ -12,51 +12,52 @@ export const authMiddleware = async (
   try {
     const authHeader = req.headers.authorization;
 
-    if (!authHeader?.startsWith('Bearer ')) {
-      throw new AppError('Missing or invalid authorization header', 401);
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      throw new AppError('Authentication required', 401);
     }
 
     const token = authHeader.split(' ')[1];
 
-    const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
+    const {
+      data: { user },
+      error,
+    } = await supabaseAdmin.auth.getUser(token);
 
     if (error || !user) {
       throw new AppError('Invalid or expired token', 401);
     }
 
-    // Ensure user exists in our database
-    let dbUser = await prisma.user.findUnique({
-      where: { id: user.id },
+    const dbUser = await prisma.user.findUnique({
+      where: {
+        id: user.id,
+      },
+      include: {
+        subscription: true,
+      },
     });
 
     if (!dbUser) {
-      dbUser = await prisma.user.create({
-        data: {
-          id: user.id,
-          email: user.email!,
-          name: user.user_metadata?.name || user.email!.split('@')[0],
-          avatar: user.user_metadata?.avatar_url,
-        },
-      });
+      throw new AppError('User account not found', 404);
+    }
 
-      // Create free subscription
-      await prisma.subscription.upsert({
-        where: { userId: user.id },
-        update: {},
-        create: {
-          userId: user.id,
-          stripeCustomerId: `cust_${user.id}`,
-          plan: 'free',
-          status: 'free',
-        },
-      });
+    const isAccountActive =
+      (dbUser as { isActive?: boolean; active?: boolean; is_active?: boolean })
+        .isActive ??
+      (dbUser as { isActive?: boolean; active?: boolean; is_active?: boolean })
+        .active ??
+      (dbUser as { isActive?: boolean; active?: boolean; is_active?: boolean })
+        .is_active ??
+      true;
+
+    if (!isAccountActive) {
+      throw new AppError('Account disabled', 403);
     }
 
     req.user = {
-      id: user.id,
-      email: user.email!,
-      name: dbUser.name,
-      avatar: dbUser.avatar,
+      id: dbUser.id,
+      email: dbUser.email,
+      name: dbUser.name || undefined,
+      avatar: dbUser.avatar || undefined,
     };
 
     next();
@@ -72,16 +73,24 @@ export const optionalAuth = async (
 ) => {
   try {
     const authHeader = req.headers.authorization;
-    if (!authHeader?.startsWith('Bearer ')) {
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return next();
     }
 
     const token = authHeader.split(' ')[1];
-    const { data: { user } } = await supabaseAdmin.auth.getUser(token);
+
+    const {
+      data: { user },
+    } = await supabaseAdmin.auth.getUser(token);
 
     if (user) {
-      req.user = { id: user.id, email: user.email! };
+      req.user = {
+        id: user.id,
+        email: user.email!,
+      };
     }
+
     next();
   } catch {
     next();
