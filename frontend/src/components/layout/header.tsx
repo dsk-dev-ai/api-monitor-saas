@@ -13,14 +13,26 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { LogOut, User, Bell } from 'lucide-react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 export function Header() {
   const { user, signOut } = useAuth();
+  const pathname = usePathname();
+
+  const title =
+  pathname === '/dashboard'
+    ? 'Dashboard'
+    : pathname
+        .split('/')
+        .filter(Boolean)
+        .pop()
+        ?.replace('-', ' ')
+        .replace(/\b\w/g, (c) => c.toUpperCase()) || 'Dashboard';
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-card px-6">
       <div className="flex items-center gap-4">
-        <h1 className="text-xl font-semibold">Dashboard</h1>
+        <h1 className="text-xl font-semibold">{title}</h1>
       </div>
 
       <div className="flex items-center gap-4">

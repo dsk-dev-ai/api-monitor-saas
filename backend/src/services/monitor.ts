@@ -1,6 +1,6 @@
 import { prisma } from '../config/database';
 import { PLAN_LIMITS } from '../types';
-import { asyncHandler, AppError } from '../middleware/error';
+import { AppError } from '../middleware/error';
 
 export const monitorService = {
   /**

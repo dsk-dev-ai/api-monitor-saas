@@ -12,6 +12,7 @@ isAuthenticated,
 isLoading,
 setUser,
 setLoading,
+setInitialized,
 logout,
 } = useAuthStore();
 
@@ -45,14 +46,9 @@ const checkAuth = useCallback(async () => {
       logout();
     } finally {
       setLoading(false);
+      setInitialized(true);
     }
-}, [
-user,
-isAuthenticated,
-logout,
-setLoading,
-setUser,
-]);
+}, [user, isAuthenticated, setLoading, logout, setUser, setInitialized]);
 
 const signIn = async (email: string, password: string) => {
   try {
@@ -94,15 +90,11 @@ const signUp = async (email: string, password: string, name?: string) => {
   try {
     setError(null);
 
-    const { error: supabaseError } = await supabase.auth.signUp({
+    await api.post('/auth/signup', {
       email,
       password,
-      options: { data: { name } },
+      name,
     });
-
-    if (supabaseError) {
-      throw supabaseError;
-    }
 
     return {
       success: true,

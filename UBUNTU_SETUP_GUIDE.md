@@ -1,4 +1,4 @@
-# API Monitor SaaS v1.0 — Complete Ubuntu 24.04 Setup Guide
+# API Monitor SaaS v2.0 — Complete Ubuntu 24.04 Setup Guide
 
 ## Prerequisites
 - Ubuntu Server 24.04 LTS (fresh install recommended)

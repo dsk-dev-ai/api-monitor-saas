@@ -34,8 +34,9 @@ router.post('/signup', asyncHandler(async (req, res) => {
   });
 
   if (error) {
+    console.log('SUPABASE SIGNUP ERROR:', error);
     throw new AppError(error.message, 400);
-  }
+  }  
 
   if (data.user) {
     await prisma.user.upsert({

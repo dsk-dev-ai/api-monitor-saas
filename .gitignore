@@ -58,3 +58,4 @@ PROJECT_REPORT.md
 .backup-*/
 *.backup
 .backup
+release-evidence/videos/

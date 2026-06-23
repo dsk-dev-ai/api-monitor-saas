@@ -16,7 +16,11 @@ children: React.ReactNode;
 const router = useRouter();
 
 // Call useAuth for any side-effects it performs (it doesn't return values)
-useAuth();
+const { checkAuth } = useAuth();
+
+useEffect(() => {
+  checkAuth();
+}, [checkAuth]);
 
 const {
 	isAuthenticated,
