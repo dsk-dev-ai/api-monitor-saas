@@ -71,6 +71,26 @@ export const useAuthStore = create<AuthState>()(
       partialize: (state) => ({
         user: state.user,
       }),
+      // Enable persistence only on the client
+      storage: {
+        getItem: () => {
+          if (typeof window !== 'undefined') {
+            const item = localStorage.getItem('auth-storage');
+            return item ? JSON.parse(item) : null;
+          }
+          return null;
+        },
+        setItem: (key: string, value: any) => {
+          if (typeof window !== 'undefined') {
+            localStorage.setItem(key, JSON.stringify(value));
+          }
+        },
+        removeItem: (key: string) => {
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem(key);
+          }
+        },
+      },
     }
   )
 );
