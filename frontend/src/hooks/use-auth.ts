@@ -6,26 +6,26 @@ import { api } from '@/lib/api-client';
 import { supabase } from '@/lib/supabase-client';
 
 export function useAuth() {
-const {
-user,
-isAuthenticated,
-isLoading,
-setUser,
-setLoading,
-setInitialized,
-logout,
-} = useAuthStore();
+  const {
+    user,
+    isAuthenticated,
+    isLoading,
+    setUser,
+    setLoading,
+    setInitialized,
+    logout,
+  } = useAuthStore();
 
-const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-const checkAuth = useCallback(async () => {
+  const checkAuth = useCallback(async () => {
     try {
       // Already authenticated, skip duplicate request
       if (user && isAuthenticated) {
         return;
       }
 
-      const token = localStorage.getItem('access_token');
+      const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
 
       if (!token) {
         logout();
@@ -41,6 +41,7 @@ const checkAuth = useCallback(async () => {
       } else {
         logout();
       }
+
     } catch (err) {
       console.error('Auth check failed:', err);
       logout();
@@ -48,81 +49,85 @@ const checkAuth = useCallback(async () => {
       setLoading(false);
       setInitialized(true);
     }
-}, [user, isAuthenticated, setLoading, logout, setUser, setInitialized]);
+  }, [user, isAuthenticated, setLoading, logout, setUser, setInitialized]);
 
-const signIn = async (email: string, password: string) => {
-  try {
-    setError(null);
+  const signIn = async (email: string, password: string) => {
+    try {
+      setError(null);
 
-    const { data, error: supabaseError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+      const { data, error: supabaseError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    if (supabaseError) {
-      throw supabaseError;
+      if (supabaseError) {
+        throw supabaseError;
+      }
+
+      if (!data.session) {
+        throw new Error('No session returned');
+      }
+
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('access_token', data.session.access_token);
+        localStorage.setItem('refresh_token', data.session.refresh_token);
+      }
+
+      const { data: userData } = await api.get('/auth/me');
+
+      if (!userData?.user) {
+        throw new Error('Failed to load user profile');
+      }
+
+      setUser(userData.user);
+
+      return { success: true };
+
+    } catch (err: any) {
+      const message = err?.message || 'Failed to sign in';
+      setError(message);
+      return { success: false, error: message };
     }
+  };
 
-    if (!data.session) {
-      throw new Error('No session returned');
+  const signUp = async (email: string, password: string, name?: string) => {
+    try {
+      setError(null);
+
+      await api.post('/auth/signup', {
+        email,
+        password,
+        name,
+      });
+
+      return {
+        success: true,
+        message: 'Check your email to verify your account',
+      };
+
+    } catch (err: any) {
+      const message = err?.message || 'Failed to sign up';
+      setError(message);
+      return { success: false, error: message };
     }
+  };
 
-    localStorage.setItem('access_token', data.session.access_token);
-    localStorage.setItem('refresh_token', data.session.refresh_token);
-
-    const { data: userData } = await api.get('/auth/me');
-
-    if (!userData?.user) {
-      throw new Error('Failed to load user profile');
+  const signOut = async () => {
+    try {
+      await supabase.auth.signOut();
+    } finally {
+      logout();
     }
+  };
 
-    setUser(userData.user);
-
-    return { success: true };
-  } catch (err: any) {
-    const message = err?.message || 'Failed to sign in';
-    setError(message);
-    return { success: false, error: message };
-  }
-};
-
-const signUp = async (email: string, password: string, name?: string) => {
-  try {
-    setError(null);
-
-    await api.post('/auth/signup', {
-      email,
-      password,
-      name,
-    });
-
-    return {
-      success: true,
-      message: 'Check your email to verify your account',
-    };
-  } catch (err: any) {
-    const message = err?.message || 'Failed to sign up';
-    setError(message);
-    return { success: false, error: message };
-  }
-};
-
-const signOut = async () => {
-try {
-await supabase.auth.signOut();
-} finally {
-logout();
-}
-};
-
-return {
-user,
-isAuthenticated,
-isLoading,
-error,
-signIn,
-signUp,
-signOut,
-checkAuth,
-};
+  return {
+    user,
+    isAuthenticated,
+    isLoading,
+    error,
+    signIn,
+    signUp,
+    signOut,
+    checkAuth,
+  };
 }

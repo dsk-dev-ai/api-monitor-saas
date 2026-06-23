@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 
@@ -22,12 +22,27 @@ useEffect(() => {
   checkAuth();
 }, [checkAuth]);
 
-const {
-	isAuthenticated,
-	isLoading,
-} = useAuthStore();
+// Initialize state for auth values
+const [isAuthenticated, setIsAuthenticated] = useState(false);
+const [isLoading, setIsLoading] = useState(true);
+const [isInitialized, setIsInitialized] = useState(false);
 
-const { isInitialized } = useAuthStore();
+// Sync auth store values to React state (client-only)
+useEffect(() => {
+  const store = useAuthStore.getState();
+  setIsAuthenticated(store.isAuthenticated);
+  setIsLoading(store.isLoading);
+  setIsInitialized(store.isInitialized);
+
+// Subscribe to store changes
+  const unsubscribe = useAuthStore.subscribe((state) => {
+    setIsAuthenticated(state.isAuthenticated);
+    setIsLoading(state.isLoading);
+    setIsInitialized(state.isInitialized);
+  });
+
+  return unsubscribe;
+}, []);
 
 // Redirect unauthenticated users
 useEffect(() => {
@@ -38,26 +53,19 @@ isInitialized &&
 ) {
 router.replace('/login');
 }
-}, [
-isInitialized,
-isLoading,
-isAuthenticated,
-router,
-]);
+}, [isInitialized, isLoading, isAuthenticated, router]);
 
 // Initial auth check
 if (!isInitialized || isLoading) {
-return ( <div className="flex h-screen items-center justify-center"> <Loader2 className="h-8 w-8 animate-spin text-primary" /> </div>
-);
+return (<div className="flex h-screen items-center justify-center"> <Loader2 className="h-8 w-8 animate-spin text-primary" /> </div>);
+
 }
 
 // Redirecting
 if (!isAuthenticated) {
-return ( <div className="flex h-screen items-center justify-center"> <Loader2 className="h-8 w-8 animate-spin text-primary" /> </div>
-);
+return (<div className="flex h-screen items-center justify-center"> <Loader2 className="h-8 w-8 animate-spin text-primary" /> </div>);
+
 }
 
-return ( <DashboardShell>
-{children} </DashboardShell>
-);
+return (<DashboardShell>{children}</DashboardShell>);
 }
