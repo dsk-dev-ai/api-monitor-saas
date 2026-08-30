@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
+import { getApiV1BaseUrl } from '@/lib/api-url';
 
 interface StatusPageData {
   name: string;
@@ -25,7 +26,7 @@ interface StatusPageData {
 
 async function getStatusPage(slug: string): Promise<StatusPageData | null> {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/status-pages/public/${slug}`, {
+    const res = await fetch(`${getApiV1BaseUrl()}/status-pages/public/${slug}`, {
       next: { revalidate: 30 },
     });
     if (!res.ok) return null;
