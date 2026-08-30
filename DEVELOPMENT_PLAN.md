@@ -1,5 +1,5 @@
 # API Monitor SaaS v2.0 — Complete Ubuntu 24.04 Development Plan
-## From Zero to Production-Ready MVP
+## From Zero to a Deployable MVP
 
 ---
 
@@ -13,12 +13,12 @@ sudo apt update && sudo apt upgrade -y
 # Install essential packages
 sudo apt install -y curl wget git build-essential software-properties-common     apt-transport-https ca-certificates gnupg lsb-release
 
-# Install Node.js 20 LTS
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+# Install Node.js 22 LTS
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
 sudo apt install -y nodejs
 
 # Verify
-node -v  # Should show v20.x.x
+node -v  # Should show v22.x.x
 npm -v   # Should show 10.x.x
 
 # Install PM2 globally

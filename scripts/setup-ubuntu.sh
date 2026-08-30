@@ -29,10 +29,10 @@ sudo apt install -y curl wget git build-essential software-properties-common \
     apt-transport-https ca-certificates gnupg lsb-release nginx ufw
 success "Essential packages installed"
 
-# Install Node.js 20 LTS
-log "Installing Node.js 20 LTS..."
-if ! command -v node &> /dev/null || [ "$(node -v | cut -d'v' -f2 | cut -d'.' -f1)" != "20" ]; then
-    curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+# Install Node.js 22 LTS
+log "Installing Node.js 22 LTS..."
+if ! command -v node &> /dev/null || [ "$(node -v | cut -d'v' -f2 | cut -d'.' -f1)" != "22" ]; then
+    curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
     sudo apt install -y nodejs
 fi
 success "Node.js $(node -v) installed"

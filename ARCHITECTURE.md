@@ -88,7 +88,7 @@
 ### Backend Stack
 | Component | Technology | Version | Purpose |
 |-----------|-----------|---------|---------|
-| Runtime | Node.js | 20 LTS | JavaScript runtime |
+| Runtime | Node.js | 22 LTS | JavaScript runtime |
 | Framework | Express.js | 4.18 | API framework |
 | ORM | Prisma | 5.7 | Database ORM |
 | Validation | Zod | 3.22 | Schema validation |
