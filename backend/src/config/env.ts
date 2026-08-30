@@ -6,6 +6,11 @@ dotenv.config({
   path: path.resolve(__dirname, '../../../.env'),
 });
 
+const booleanFromEnv = z.preprocess((val) => {
+  if (val === undefined) return undefined;
+  return ['1', 'true', 'yes', 'on'].includes(String(val).toLowerCase());
+}, z.boolean());
+
 const envSchema = z.object({
 NODE_ENV: z.enum([
 'development',
@@ -41,15 +46,15 @@ RESEND_API_KEY: z.string().optional(),
 
 FROM_EMAIL: z.string().email(),
 
-ENABLE_EMAILS: z.coerce.boolean().default(false),
+ENABLE_EMAILS: booleanFromEnv.default(false),
 
-ENABLE_BILLING: z.coerce.boolean().default(false),
+ENABLE_BILLING: booleanFromEnv.default(false),
 
-ENABLE_SIGNUPS: z.coerce.boolean().default(true),
+ENABLE_SIGNUPS: booleanFromEnv.default(true),
 
-ENABLE_WORKSPACES: z.coerce.boolean().default(true),
+ENABLE_WORKSPACES: booleanFromEnv.default(true),
 
-ENABLE_TEAMS: z.coerce.boolean().default(true),
+ENABLE_TEAMS: booleanFromEnv.default(true),
 });
 
 const parsed = envSchema.safeParse(process.env);

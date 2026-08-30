@@ -48,6 +48,7 @@ router.get('/plans', asyncHandler(async (req, res) => {
       description: 'Perfect for personal projects',
       price: 0,
       priceLabel: 'Free forever',
+      priceId: null,
       features: PLAN_LIMITS.free.features,
       limits: {
         maxMonitors: PLAN_LIMITS.free.maxMonitors,
@@ -61,6 +62,7 @@ router.get('/plans', asyncHandler(async (req, res) => {
       description: 'For small teams and startups',
       price: 9,
       priceLabel: '$9/month',
+      priceId: process.env.STRIPE_PRICE_BASIC || null,
       features: PLAN_LIMITS.basic.features,
       limits: {
         maxMonitors: PLAN_LIMITS.basic.maxMonitors,
@@ -74,6 +76,7 @@ router.get('/plans', asyncHandler(async (req, res) => {
       description: 'For growing businesses',
       price: 29,
       priceLabel: '$29/month',
+      priceId: process.env.STRIPE_PRICE_PRO || null,
       features: PLAN_LIMITS.pro.features,
       limits: {
         maxMonitors: PLAN_LIMITS.pro.maxMonitors,
@@ -83,7 +86,7 @@ router.get('/plans', asyncHandler(async (req, res) => {
     },
   ];
 
-  res.json({ plans });
+  res.json({ plans, billingEnabled: !!stripe, checkoutEnabled: !!process.env.STRIPE_PRICE_BASIC && !!process.env.STRIPE_PRICE_PRO });
 }));
 
 // Create checkout session
