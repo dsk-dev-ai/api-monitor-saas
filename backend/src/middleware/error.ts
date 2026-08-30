@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { ZodError } from 'zod';
 import { logger } from '../utils/logger';
 
 export class AppError extends Error {
@@ -28,6 +29,18 @@ export const errorHandler = (
     return res.status(err.statusCode).json({
       error: err.message,
       ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
+    });
+  }
+
+  if (err instanceof ZodError) {
+    const message = err.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join('; ');
+    logger.warn(`Validation error: ${message}`, {
+      path: req.path,
+      method: req.method,
+    });
+    return res.status(400).json({
+      error: message,
+      details: err.errors,
     });
   }
 
