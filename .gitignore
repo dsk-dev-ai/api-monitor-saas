@@ -42,6 +42,10 @@ Thumbs.db
 coverage/
 .nyc_output/
 
+# Internal / root working notes (not project deliverable)
+PROFESSIONALIZE-PROMPT.md
+FULL-ROADMAP-TO-COMPLETE.md
+
 # Misc
 *.pem
 *.key
