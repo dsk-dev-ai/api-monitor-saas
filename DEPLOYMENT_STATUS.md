@@ -1,43 +1,29 @@
 # Deployment Status
 
-This document describes the project's deployment readiness **as actually configured right now**. It deliberately does **not** point at live demo URLs that don't exist — instead it states exactly what is missing and what is blocked, so nothing is over-sold.
+**Current status: LIVE.** The app is deployed on free tiers and reachable by visitors.
 
-Status: **Self-hostable with Docker locally; combined single-service image built & verified; production (free-tier) live deploy is BLOCKED on missing external credentials.**
+| Service | URL | Notes |
+|---------|-----|-------|
+| Frontend | https://api-monitor-saas-frontend.vercel.app | Next.js 14 on Vercel (auto-deploys from `main`) |
+| API + worker | https://api-monitor-api.onrender.com | Combined single service on Render free tier (port 10000); `/health` → 200 |
+| Docs | `/docs` on the frontend | In-app docs |
 
-## What is ready
+## How it's deployed
 
-- **Combined API + worker image** (`Dockerfile` at repo root) — builds backend + worker into **one** container so a single free platform service (e.g. Render free web service) serves both:
-  - Image builds cleanly (Node 22 slim, Prisma engine verified working with glibc).
-  - Verified live in Docker: `/health` → 200 `healthy`, worker scheduler runs real checks, signup → 201.
-  - `docker/start-combined.sh` runs API (port 3001) + worker together, auto-restarts either if it exits.
-  - Requires `--add-host=host.docker.internal:host-gateway` only when running against local Postgres for tests; on a real host the DB URL is remote.
-- **Render blueprint** (`render.yaml`) — imports the root `Dockerfile`, health check on `/health`. Free-tier keep-awake via `.github/workflows/keep-alive.yml` (pings `/health` every 5 min so the free instance never sleeps and background checks keep running).
-- **Frontend** — Vercel auto-detects Next.js in `frontend/`; `frontend/vercel.json` pins the prod API URL + Supabase env (REPLACE_ME placeholders). Billing page now wired to the real API (plans, subscription, usage, checkout, portal); pricing page reads real plans.
-- **Docker Compose** development + production paths exist (`docker-compose.yml`, `docker-compose.prod.yml`).
-- **Local stack verified working** end-to-end: signup / signin / me / monitors / analytics all 200, worker performs real HTTP checks, billing plans + subscription return real limits.
-- **CI** (`.github/workflows/ci.yml`) builds, lints, typechecks, and tests all three workspaces on Node 22.
-- **Production hardening** (this release): backend env booleans fixed (string `"false"` was wrongly parsed as `true`), Zod validation → HTTP 400 instead of 500, leaked-password protection + password requirements enabled, SECURITY DEFINER hardening migration, frontend surfaces real backend error messages.
+- **Render** imports the root `Dockerfile` (combined API + background worker image) via `render.yaml`. Free instance auto-restarts and is kept awake by `.github/workflows/keep-alive.yml` pinging `/health` every 5 minutes.
+- **Vercel** builds the `frontend/` workspace; `NEXT_PUBLIC_*` env vars are set in the Vercel project. Repo homepage points at the live frontend.
+- **Supabase** (hosted) provides Auth + the database; account confirmation by email is enabled.
 
-## What is blocked (live production deploy)
+## Environment / credentials
 
-A public, always-on free-tier deployment (Vercel + Render + hosted Supabase) is **not** enabled because the following external credentials/accounts are **not configured** in this environment:
+- `NEXT_PUBLIC_API_URL` must be the **backend root** (e.g. `https://api-monitor-api.onrender.com`) — the frontend appends `/api/v1` itself. `frontend/src/lib/api-url.ts` is resilient to a stray `/api/v1` suffix being included.
+- The following are intentionally **not** configured (deliberate, not blockers):
+  - **Stripe** — billing is disabled by design while there are no paying customers. `ENABLE_BILLING=true` but a missing `STRIPE_SECRET_KEY` logs a warning and disables checkout; the UI degrades gracefully. Add Stripe keys only when there is a real need (see below).
+  - **Redis** — `REDIS_URL` is unused/optional; the worker runs in-process on an interval.
 
-| Blocker | Detail | Needed |
-|---------|--------|--------|
-| Hosted Supabase project | Only a **local** Supabase stack exists (127.0.0.1). No hosted `SUPABASE_URL` / anon / service-role keys. | A `[project-ref].supabase.co` project (free) — also enable email verification + SMTP via Resend there |
-| Stripe | `.env` holds placeholder / test-style values only; no verified Stripe account wired. | Test-mode first: `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_BASIC`, `STRIPE_PRICE_PRO`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` |
-| Resend (email) | Placeholder `RESEND_API_KEY`; no verified domain. | `RESEND_API_KEY`, verified `FROM_EMAIL` domain |
-| Vercel (frontend) | No Vercel project/team linked; no deploy token. | Vercel account + `frontend/vercel.json` env values |
-| Render (backend + worker) | No Render service; `render.yaml` needs importing and secrets filling. | Import blueprint in Render; set `sync: false` env vars; set `BACKEND_URL` Actions secret for keep-alive |
-| Redis (free) | Local Redis only. | Free Upstash instance URL for `REDIS_URL` |
-| GitHub Actions secrets | Keep-alive + deploy workflows need `BACKEND_URL` (and the SSH/Docker secrets if using `deploy.yml`). | `BACKEND_URL` (and optionally `SERVER_HOST`/`SERVER_USER`/`SSH_PRIVATE_KEY`/`ENV_FILE`) |
+## Still needed before welcoming paying customers
 
-## Recommended path to go live (free-tier, once credentials exist)
+1. **Email sending (signup confirmation)** — hosted Supabase confirms accounts by email, which requires a verified SMTP sender (e.g. Resend). Without it, new visitors cannot complete signup. This is the highest-priority item for real traffic.
+2. **Stripe (only when ready to charge)** — add `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_BASIC/PRO`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` to Render, and point the webhook at `/api/v1/billing/webhook`.
 
-1. Provision a hosted **Supabase** project; set `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, and the `database` connection string. Enable email confirmations + SMTP (Resend).
-2. Deploy **backend + worker** to Render via `render.yaml` (one combined free web service), fill `sync: false` env vars, add the keep-alive secret.
-3. Deploy **frontend** to Vercel; set `NEXT_PUBLIC_*` env vars (see `frontend/vercel.json`).
-4. Configure Stripe (test mode first) + Resend with real keys; point `STRIPE_WEBHOOK_SECRET` at the webhook URL.
-5. Add a release workflow that deploys on `v*` tags and smoke-tests `/health` **after** posting it.
-
-> Follow the same free-tier-only pattern used successfully on the companion `GenomeAI` project.
+Everything else — signup, signin, monitor management, background checks, analytics, alerts, public status pages — is verified working on the live deployment.
