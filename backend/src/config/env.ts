@@ -35,7 +35,7 @@ JWT_SECRET: z.string().min(
 
 FRONTEND_URL: z.string().url(),
 
-REDIS_URL: z.string().url(),
+REDIS_URL: z.string().url().optional(),
 
 STRIPE_SECRET_KEY: z.string().optional(),
 STRIPE_WEBHOOK_SECRET: z.string().optional(),
