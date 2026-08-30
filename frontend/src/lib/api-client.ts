@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001',
+  baseURL: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/v1`,
 });
 
 // Request interceptor to add auth token
@@ -39,7 +39,7 @@ api.interceptors.response.use(
       }
 
       try {
-        const { data } = await api.post('/auth/refresh', { refreshToken });
+        const { data } = await api.post('/auth/refresh', { refresh_token: refreshToken });
         if (typeof window !== 'undefined') {
           localStorage.setItem('access_token', data.access_token);
         }

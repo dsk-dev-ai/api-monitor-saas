@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { Prisma } from '@prisma/client';
 import { prisma } from '../config/database';
 import { authMiddleware } from '../middleware/auth';
 import { asyncHandler, AppError } from '../middleware/error';
@@ -11,7 +12,7 @@ router.get('/', authMiddleware, asyncHandler(async (req, res) => {
   const limit = Math.min(parseInt(req.query.limit as string) || 50, 100);
   const status = req.query.status as string | undefined;
 
-  const where: any = { userId };
+  const where: Prisma.AlertWhereInput = { userId };
   if (status) where.status = status;
 
   const [alerts, total] = await Promise.all([

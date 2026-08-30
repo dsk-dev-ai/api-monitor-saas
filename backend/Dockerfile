@@ -8,9 +8,9 @@ RUN npm config set fetch-retries 5
 RUN npm config set fetch-retry-mintimeout 20000
 RUN npm config set fetch-retry-maxtimeout 120000
 
-# Copy package.json and install deps
-COPY package.json ./
-RUN npm install --prefer-offline --no-audit --no-fund
+# Copy package files and install deps
+COPY package*.json ./
+RUN npm ci --prefer-offline --no-audit --no-fund
 
 # Copy prisma schema and generate client BEFORE building
 COPY prisma ./prisma/
@@ -27,15 +27,13 @@ ENV NODE_ENV=production
 
 RUN npm config set registry https://registry.npmmirror.com || true
 
-COPY package.json ./
-RUN npm install --omit=dev --prefer-offline --no-audit --no-fund
+COPY package*.json ./
+RUN npm ci --omit=dev --prefer-offline --no-audit --no-fund
 
 # Copy built files and prisma client
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-
-RUN npx prisma generate
 
 EXPOSE 3001
 

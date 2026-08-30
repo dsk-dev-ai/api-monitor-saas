@@ -1,277 +1,167 @@
 <div align="center">
 
-# 🔍 API Monitor SaaS v2.0
+![API Monitor SaaS banner](.github/api-monitor-og.svg)
 
-**Production-Ready API & Website Uptime Monitoring Platform**
+# API Monitor SaaS
 
-[![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](https://github.com/dsk-dev-ai/api-monitor-saas/releases)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Node](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen)](https://nodejs.org)
+**Open-source API & website uptime monitoring, self-hostable**
+
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Node](https://img.shields.io/badge/node-%3E%3D22-brightgreen)](https://nodejs.org)
 [![Next.js](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org)
-[![Express](https://img.shields.io/badge/Express-4.18-lightgrey)](https://expressjs.com)
+[![Express](https://img.shields.io/badge/Express-4-lightgrey)](https://expressjs.com)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue)](https://postgresql.org)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 </div>
 
 ---
 
-## 🚀 What's New in v2.0
+## What is it
 
-API Monitor SaaS v2.0 is a **major release** featuring:
+API Monitor SaaS monitors your APIs and websites by running periodic health checks, tracking uptime and response-time analytics, and notifying you by email when a service goes down — or comes back up. It ships as three services (Next.js dashboard, Express API, and a background monitoring worker) on a shared PostgreSQL database.
 
-- ✅ **Authentication** — Secure user authentication system
-- ✅ **Dashboard** — Real-time monitoring dashboard
-- ✅ **Monitor Management** — Create, edit, and delete monitors
-- ✅ **Analytics** — Response time tracking and visualization
-- ✅ **Alerts** — Email notifications for status changes
-- ✅ **Worker Service** — Background monitoring service
+It is **self-hostable** with Docker Compose. Auth uses Supabase; billing (Stripe) and email (Resend) integrations are implemented in the backend but require your own keys (see [Configuration](#configuration)).
 
----
+## What works
 
-## 🏗️ Architecture
+| Area | Status |
+|------|--------|
+| **Auth** (Supabase signup / signin / me / refresh / reset-password) | ✅ Built & working |
+| **Monitor management** (create / list / detail / pause / resume / delete, plan limits) | ✅ Built & working |
+| **Background checks** (worker runs HTTP probes on an interval, stores results) | ✅ Built & working |
+| **Uptime & response-time analytics** (dashboard + per-monitor charts) | ✅ Built & working |
+| **Alerts** (on status change to down/recovered; email via Resend, env-gated) | ✅ Built & working |
+| **Public status pages** (public view per slug) | 🟡 Built (API + public page); management UI is next |
+| **Billing** (Stripe checkout / portal / webhooks — backend only) | 🟡 Backend built; dashboard wiring is next |
+| **Settings / Team / Workspaces** (pages) | 🔜 Coming next (placeholders) |
+| **Slack / webhook / SMS notifications, Redis job queues** | 🔜 Planned (not implemented) |
 
-```
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│   Next.js   │────▶│   Express   │────▶│  PostgreSQL │
-│  Frontend   │     │    API      │     │  (Supabase) │
-│  Port 3000  │◄────│  Port 3001  │◄────│             │
-└─────────────┘     └──────┬──────┘     └─────────────┘
-                           │
-                    ┌──────┴──────┐
-                    │   Worker    │
-                    │  Port 3002  │
-                    │  (Cron)     │
-                    └─────────────┘
-```
+> Every claim above reflects what the code actually does today. Anything described as "Coming next" is intentionally not over-sold.
 
-### Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| **Frontend** | Next.js 14, Tailwind CSS, shadcn/ui, Recharts, Zustand |
-| **Backend** | Node.js 20, Express.js, Prisma ORM, Zod, Winston |
-| **Worker** | Node.js, Axios, node-cron, BullMQ |
-| **Database** | PostgreSQL 16 (Supabase) |
-| **Auth** | Supabase Auth (JWT) |
-| **Payments** | Stripe (Checkout + Billing Portal) |
-| **Email** | Resend API |
-| **Cache/Queue** | Redis 7 |
-| **Proxy** | NGINX |
-| **SSL** | Let's Encrypt |
-| **Deploy** | Docker Compose |
-
----
-
-## 📦 Quick Start
+## Quick Start
 
 ### Prerequisites
-- Ubuntu 24.04 LTS (or any Linux/macOS/Windows with Docker)
-- Node.js 20+
-- Docker & Docker Compose
-- Supabase account
-- Stripe account (for billing)
-- Resend account (for email alerts)
+- Docker & Docker Compose (recommended path) **or** Node.js 22+ for manual setup
+- A Supabase project (or local Supabase) for auth
+- Optional: Stripe and Resend keys for billing / email
 
-### 1. Clone Repository
+### 1. Clone
 
 ```bash
 git clone https://github.com/dsk-dev-ai/api-monitor-saas.git
 cd api-monitor-saas
 ```
 
-### 2. Environment Setup
+### 2. Environment
 
 ```bash
-# Copy environment template
 cp .env.example .env
-
-# Edit with your credentials
-nano .env
+# Fill in at minimum: DATABASE_URL, SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY
 ```
 
-### 3. Start with Docker (Recommended)
+See [`ENV_GUIDE.txt`](ENV_GUIDE.txt) for exactly where each value comes from.
+
+### 3. Start with Docker (recommended)
 
 ```bash
-# Start all services
 docker compose up -d
 
-# Run database migrations
+# Apply the database schema
 docker compose exec backend npx prisma db push
-
-# Access the app
-# Frontend: http://localhost:3000
-# API: http://localhost:3001
-# API Docs: http://localhost:3001/api/v1
 ```
 
-### 4. Manual Setup (Development)
+Then open:
+- Dashboard: http://localhost:3000
+- API: http://localhost:3001
+- Health: http://localhost:3001/health
+
+### 4. Manual (development)
 
 ```bash
-# Install dependencies
 npm install
-
-# Database setup
-cd backend && npx prisma db push && cd ..
-
-# Start services
+npx prisma db push --schema backend/prisma/schema.prisma
+npm run db:generate
 npm run dev
 ```
 
----
+## Tech Stack
 
-## 🗂️ Project Structure
+| Layer | Technology |
+|-------|-----------|
+| **Frontend** | Next.js 14, Tailwind CSS, shadcn/ui, Recharts, Zustand |
+| **Backend** | Node.js 22, Express.js, Prisma ORM, Zod, Winston |
+| **Worker** | Node.js, Axios, node-cron |
+| **Database** | PostgreSQL 16 |
+| **Auth** | Supabase Auth (JWT) |
+| **Payments** | Stripe (Checkout + Billing Portal) — backend | 
+| **Email** | Resend API — worker alerts |
+| **Deploy** | Docker Compose |
+
+## Architecture
 
 ```
-api-monitor-saas/
-├── frontend/              # Next.js 14 Application
-│   ├── app/               # App Router pages
-│   ├── components/        # UI components (shadcn/ui)
-│   ├── hooks/             # React hooks
-│   └── lib/               # Utilities, API client
-├── backend/               # Express API Server
-│   ├── src/routes/        # API routes
-│   ├── src/middleware/    # Auth, error handling
-│   ├── src/config/        # Database, Supabase
-│   └── prisma/            # Database schema
-├── worker/                # Monitoring Worker
-│   ├── src/services/      # HTTP executor, alerts
-│   └── src/index.ts       # Cron scheduler
-├── nginx/                 # Reverse proxy config
-├── scripts/               # Ubuntu setup, deploy, backup
-└── .github/workflows/     # CI/CD pipelines
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│   Next.js   │────▶│   Express   │────▶│  PostgreSQL │
+│  Frontend   │     │    API      │     │             │
+│  Port 3000  │◄────│  Port 3001  │     │             │
+└─────────────┘     └──────┬──────┘     └─────────────┘
+                           │
+                    ┌──────┴──────┐
+                    │   Worker    │
+                    │ (checks)    │
+                    └─────────────┘
 ```
 
----
+The **worker** is the engine: it loads active monitors on an interval, runs HTTP probes (`worker/src/services/executor.ts`), stores each result as a `Check`, detects status changes, and writes `Alert` records (emailing via Resend when configured).
 
-## 🔧 Configuration
+See [ARCHITECTURE.md](ARCHITECTURE.md) for the full system design and [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md) for the roadmap.
 
-### Supabase Setup
-1. Create project at [supabase.com](https://supabase.com)
-2. Copy Project URL and API keys to `.env`
-3. Enable Email provider in Authentication settings
-4. Configure redirect URLs
+## API
 
-### Stripe Setup
-1. Create products: Free, Basic ($9/mo), Pro ($29/mo)
-2. Copy Price IDs to `.env`
-3. Configure webhook endpoint: `/api/v1/billing/webhook`
-4. Copy Webhook Secret to `.env`
-
-### Resend Setup
-1. Sign up at [resend.com](https://resend.com)
-2. Verify your domain
-3. Copy API key to `.env`
-
----
-
-## 🌿 Git Workflow
-
-```bash
-# Feature development
-git checkout develop
-git pull origin develop
-git checkout -b feature/my-feature
-# ... code ...
-git commit -m "feat: add new feature"
-git push origin feature/my-feature
-gh pr create --base develop
-
-# Release
-git checkout -b release/v2.0.0
-git checkout main
-git merge release/v2.0.0
-git tag -a v2.0.0 -m "Release v2.0.0"
-git push origin main --tags
-```
-
----
-
-## 🐳 Docker Deployment
-
-```bash
-# Production
-docker compose -f docker-compose.prod.yml up -d
-
-# View logs
-docker compose -f docker-compose.prod.yml logs -f
-
-# Restart
-docker compose -f docker-compose.prod.yml restart
-
-# Update
-./scripts/deploy.sh v2.0.0 production
-```
-
----
-
-## 🖥️ Ubuntu 24.04 Production Setup
-
-```bash
-# Run automated setup
-bash scripts/setup-ubuntu.sh
-
-# Or follow UBUNTU_SETUP_GUIDE.md for detailed steps
-```
-
----
-
-## 📊 API Endpoints
+Backend routes are mounted under `/api/v1`. Highlights:
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/v1/auth/signup` | POST | Create account |
-| `/api/v1/auth/signin` | POST | Sign in |
-| `/api/v1/auth/me` | GET | Get current user |
-| `/api/v1/monitors` | GET/POST | List/Create monitors |
+| `/api/v1/auth/signup` `signin` `me` | POST/POST/GET | Account + session |
+| `/api/v1/monitors` | GET/POST | List / create monitors |
 | `/api/v1/monitors/:id` | GET/PATCH/DELETE | Monitor CRUD |
 | `/api/v1/analytics/overview` | GET | Dashboard stats |
-| `/api/v1/billing/plans` | GET | Available plans |
-| `/api/v1/billing/checkout` | POST | Stripe checkout |
-| `/api/v1/status-pages/public/:slug` | GET | Public status page |
+| `/api/v1/alerts` | GET | Alert history |
+| `/api/v1/status-pages/public/:slug` | GET | Public status view |
 
----
-
-## 🧪 Testing
+## Testing
 
 ```bash
-# Backend tests
-cd backend && npm test
-
-# Frontend build check
-cd frontend && npm run build
+npm run build
+npm run lint
+npm run typecheck
+npm test
 ```
 
----
+Backend unit/integration-route tests cover monitors, checks, and alerts (12 tests).
 
-## 📈 Roadmap
+## Roadmap
 
-- [x] v1.0 — MVP with monitoring, alerts, billing
-- [x] v1.2 — Stabilization release, build fixes, Supabase compatibility, Prisma fixes
-- [x] v2.0 — Authentication, Monitor Management, Analytics Dashboard, Alert System, Worker Service
-- [ ] v2.1 — Team Workspaces, Public Status Pages, Stripe Billing
-- [ ] v3.0 — Multi-region Monitoring, Incident Management, Advanced Reporting
+- [x] v1.0 — MVP: monitoring, alerts, billing
+- [x] v2.0 — Auth, dashboard, monitor management, analytics, alert system, worker service
+- [ ] v3.0 — polished marketing site, accurate docs, professionalization pass (in progress)
+- [ ] Team workspaces, status-page management UI, Stripe billing wiring in the dashboard
+- [ ] Multi-region checks, more notification channels
 
----
+## Contributing
 
-## 🤝 Contributing
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for the workflow and our [Code of Conduct](CODE_OF_CONDUCT.md).
 
-1. Fork the repository
-2. Create feature branch: `git checkout -b feature/amazing-feature`
-3. Commit changes: `git commit -m 'feat: add amazing feature'`
-4. Push to branch: `git push origin feature/amazing-feature`
-5. Open Pull Request
+## License
 
----
-
-## 📄 License
-
-MIT License — see [LICENSE](LICENSE) file.
+MIT — see [LICENSE](LICENSE).
 
 ---
 
 <div align="center">
 
-**Built with ❤️ by [dsk-dev-ai](https://github.com/dsk-dev-ai)**
+**Built by [dsk-dev-ai](https://github.com/dsk-dev-ai)**
 
 ⭐ Star this repo if you find it useful!
 

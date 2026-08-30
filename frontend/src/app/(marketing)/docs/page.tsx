@@ -1,5 +1,3 @@
-import Link from 'next/link';
-
 export default function DocsPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-12">
@@ -20,18 +18,17 @@ export default function DocsPage() {
               <h3 className="text-lg font-medium text-gray-900 mt-6 mb-2">
                 What is API Monitor?
               </h3>
-              <p>API Monitor is a powerful monitoring solution designed for developers and DevOps teams who need to ensure their APIs are performing optimally. Our platform provides real-time insights into API availability, response times, error rates, and more.</p>
+              <p>API Monitor is a monitoring solution for developers and DevOps teams who need to ensure their APIs are performing optimally. Our platform provides insights into API availability, uptime, and response times.</p>
               
               <h3 className="text-lg font-medium text-gray-900 mt-6 mb-2">
                 Key Features
               </h3>
               <ul className="list-disc list-inside mt-2">
-                <li><strong>Real-time Monitoring:</strong> Track API performance with sub-second updates</li>
-                <li><strong>Multi-protocol Support:</strong> Monitor REST, GraphQL, SOAP, and WebSocket APIs</li>
-                <li><strong>Alerting System:</strong> Get notified via email, SMS, Slack, or webhook when issues arise</li>
-                <li><strong>Performance Analytics:</strong> Deep dive into response times, throughput, and error patterns</li>
-                <li><strong>SLA Tracking:</strong> Monitor compliance with your service level agreements</li>
-                <li><strong>Team Collaboration:</strong> Share dashboards and collaborate with team members</li>
+                <li><strong>HTTP Monitoring:</strong> Periodic health checks on your API endpoints</li>
+                <li><strong>Email Alerting:</strong> Get notified via email when a monitor changes status</li>
+                <li><strong>Performance Analytics:</strong> Uptime and response-time metrics with historical trends</li>
+                <li><strong>Uptime Tracking:</strong> Review uptime over time for every monitor</li>
+                <li><strong>Public Status Pages:</strong> Share a public status page per monitor with your users</li>
               </ul>
             </div>
           </section>
@@ -50,9 +47,9 @@ export default function DocsPage() {
                 <li>Click the <strong>+ New Monitor</strong> button</li>
                 <li>Enter your API endpoint URL</li>
                 <li>Select the HTTP method (GET, POST, PUT, DELETE, etc.)</li>
-                <li>Configure monitoring frequency (from every 10 seconds to once daily)</li>
-                <li>Set up alert conditions (response time thresholds, error rates, etc.)</li>
-                <li>Choose notification channels for alerts</li>
+                <li>Configure monitoring frequency</li>
+                <li>Set alert conditions (expected status code, keyword validation, alert on down, degraded, or recovery)</li>
+                <li>Choose whether to receive email alerts</li>
                 <li>Save your monitor</li>
               </ol>
               
@@ -61,16 +58,7 @@ export default function DocsPage() {
               </h3>
               <div className="mt-4">
                 <h4 className="text-base font-medium text-gray-900 mb-1">HTTP/HTTPS Monitors</h4>
-                <p>Standard web API monitoring for REST, GraphQL, and other HTTP-based services.</p>
-                
-                <h4 className="text-base font-medium text-gray-900 mb-1 mt-4">SSL Certificate Monitors</h4>
-                <p>Monitor SSL certificate expiration and validity for your domains.</p>
-                
-                <h4 className="text-base font-medium text-gray-900 mb-1 mt-4">TCP/Port Monitors</h4>
-                <p>Monitor availability of specific ports and TCP services.</p>
-                
-                <h4 className="text-base font-medium text-gray-900 mb-1 mt-4">DNS Monitors</h4>
-                <p>Monitor DNS resolution and response times for your domains.</p>
+                <p>Monitors run HTTP checks against your API endpoint using a configured method (GET, POST, PUT, DELETE, etc.) and can validate the expected status code and an optional response keyword.</p>
               </div>
             </div>
           </section>
@@ -82,53 +70,20 @@ export default function DocsPage() {
             </h2>
             <div className="prose prose-gray max-w-none">
               <h3 className="text-lg font-medium text-gray-900 mt-6 mb-2">
-                Custom Alert Rules
+                Alert Conditions
               </h3>
-              <p>Create sophisticated alert conditions using our rule builder:</p>
+              <p>Each monitor lets you define when it should alert:</p>
               <ul className="list-disc list-inside mt-2">
-                <li>Response time thresholds (average, percentile, max)</li>
-                <li>Error rate monitoring (HTTP 4xx, 5xx, connection errors)</li>
-                <li>Content validation (check for specific strings or JSON values)</li>
-                <li>Status code monitoring (alert on specific HTTP status codes)</li>
-                <li>Header validation (verify response headers contain expected values)</li>
+                <li>Expected status code (alert when the response does not match)</li>
+                <li>Response keyword validation (check that a specific string appears in the response)</li>
+                <li>Alert on down, degraded, and recovery</li>
               </ul>
+              <p className="mt-2">When a condition is met or cleared, an email alert is sent and recorded in the Alerts section of the dashboard.</p>
               
               <h3 className="text-lg font-medium text-gray-900 mt-6 mb-2">
-                Integrations
+                Notifications
               </h3>
-              <p>API Monitor integrates with popular tools and services:</p>
-              <ul className="list-disc list-inside mt-2">
-                <li><strong>Communication:</strong> Slack, Microsoft Teams, Discord, Email, SMS</li>
-                <li><strong>Incident Management:</strong> PagerDuty, Opsgenie, VictorOps</li>
-                <li><strong>Logging &amp; Analytics:</strong> Datadog, New Relic, Splunk, ELK Stack</li>
-                <li><strong>CI/CD:</strong> GitHub Actions, GitLab CI, Jenkins, CircleCI</li>
-                <li><strong>Infrastructure:</strong> AWS CloudWatch, Azure Monitor, Google Cloud Monitoring</li>
-              </ul>
-              
-              <h3 className="text-lg font-medium text-gray-900 mt-6 mb-2">
-                API Access
-              </h3>
-              <p>Programmatically manage your monitors and retrieve monitoring data:</p>
-              <div className="bg-white rounded-lg border border-gray-200 p-4 mt-4">
-                <pre className="text-sm font-mono text-gray-800"><code className="language-bash">{`# Get all monitors
-curl -H "Authorization: Bearer YOUR_API_KEY" \\
-  https://api.api-monitor.com/v1/monitors
-
-# Create a new monitor
-curl -X POST -H "Authorization: Bearer YOUR_API_KEY" \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "name": "My API",
-    "url": "https://api.example.com/health",
-    "method": "GET",
-    "interval": 30
-  }' \\
-  https://api.api-monitor.com/v1/monitors
-
-# Get monitoring results
-curl -H "Authorization: Bearer YOUR_API_KEY" \\
-  https://api.api-monitor.com/v1/monitors/123/results`}</code></pre>
-              </div>
+              <p>Alerts are delivered by email (via Resend). SMS, Slack, and other notification channels are planned but not yet available.</p>
             </div>
           </section>
           
@@ -145,33 +100,26 @@ curl -H "Authorization: Bearer YOUR_API_KEY" \\
                 <h4 className="text-base font-medium text-gray-900 mb-1">Monitor Shows as Down But API Works</h4>
                 <p className="mb-2">This can happen due to:</p>
                 <ul className="list-disc list-inside">
-                  <li>Firewall blocking our monitoring IPs</li>
-                  <li>Rate limiting on your API</li>
-                  <li>DNS resolution issues from our monitoring locations</li>
-                  <li>SSL certificate trust issues</li>
+                  <li>The response returned an unexpected status code</li>
+                  <li>The expected keyword was not found in the response body</li>
+                  <li>A network or DNS issue prevented the check from completing</li>
+                  <li>A request timeout occurred</li>
                 </ul>
-                <p className="mt-2">Solution: Whitelist our monitoring IPs or adjust your rate limits.</p>
+                <p className="mt-2">Solution: Review the alert details and adjust the monitor&apos;s expected status code, keyword, or timeout settings.</p>
                 
                 <h4 className="text-base font-medium text-gray-900 mb-1 mt-4">Receiving Too Many Alerts</h4>
                 <p className="mb-2">To reduce alert noise:</p>
                 <ul className="list-disc list-inside">
-                  <li>Increase alert thresholds slightly</li>
-                  <li>Enable alert suppression for flapping monitors</li>
-                  <li>Use alert grouping to combine related notifications</li>
-                  <li>Set up maintenance windows for expected downtime</li>
+                  <li>Align the expected status code with what your API actually returns</li>
+                  <li>Only enable the alert conditions you need</li>
+                  <li>Pause the monitor if you expect a temporary outage</li>
                 </ul>
               </div>
               
               <h3 className="text-lg font-medium text-gray-900 mt-6 mb-2">
                 Getting Help
               </h3>
-              <p>If you need additional assistance:</p>
-              <ul className="list-disc list-inside mt-2">
-                <li>Check our <a href="/status" className="text-blue-600 hover:underline">status page</a> for any ongoing incidents</li>
-                <li>Visit our <a href="/docs/faq" className="text-blue-600 hover:underline">FAQ</a> for common questions</li>
-                <li>Contact support at <a href="mailto:support@api-monitor.com" className="text-blue-600 hover:underline">support@api-monitor.com</a></li>
-                <li>Join our community forum at <a href="https://community.api-monitor.com" className="text-blue-600 hover:underline">community.api-monitor.com</a></li>
-              </ul>
+              <p>If you need additional assistance, contact us at <a href="mailto:support@api-monitor.com" className="text-blue-600 hover:underline">support@api-monitor.com</a>.</p>
             </div>
           </section>
           
@@ -187,34 +135,16 @@ curl -H "Authorization: Bearer YOUR_API_KEY" \\
                     How often can I monitor my APIs?
                   </h3>
                   <p className="text-gray-700">
-                    Monitoring frequency depends on your plan:
-                    <br />
-                    • Free tier: Every 5 minutes
-                    <br />
-                    • Pro tier: Every 30 seconds
-                    <br />
-                    • Business tier: Every 10 seconds
-                    <br />
-                    • Enterprise tier: Every 1 second (with global distribution)
+                    Checks are run in the background by a worker on a schedule you configure per monitor.
                   </p>
                 </div>
                 
                 <div className="border border-gray-200 rounded-lg p-4">
                   <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    What monitoring locations are available?
+                    Where are checks run from?
                   </h3>
                   <p className="text-gray-700">
-                    We monitor from 20+ global locations including:
-                    <br />
-                    • North America: New York, San Francisco, Toronto
-                    <br />
-                    • Europe: London, Frankfurt, Amsterdam
-                    <br />
-                    • Asia-Pacific: Singapore, Tokyo, Sydney
-                    <br />
-                    • South America: São Paulo
-                    <br />
-                    • Africa: Johannesburg
+                    Checks are made from our hosted background worker, so your endpoint must be reachable over the public internet.
                   </p>
                 </div>
                 
@@ -223,15 +153,7 @@ curl -H "Authorization: Bearer YOUR_API_KEY" \\
                     Is my data secure and private?
                   </h3>
                   <p className="text-gray-700">
-                    Yes, we take data security seriously:
-                    <br />
-                    • All data is encrypted in transit (TLS 1.3) and at rest (AES-256)
-                    <br />
-                    • Regular security audits and penetration testing
-                    <br />
-                    • GDPR, SOC 2 Type II, and ISO 27001 compliant
-                    <br />
-                    • You own your data and can export or delete it anytime
+                    Data is stored in a Supabase-managed PostgreSQL database, and accounts are secured with Supabase authentication.
                   </p>
                 </div>
                 
@@ -240,11 +162,7 @@ curl -H "Authorization: Bearer YOUR_API_KEY" \\
                     Can I monitor internal/private APIs?
                   </h3>
                   <p className="text-gray-700">
-                    Yes! You have two options:
-                    <br />
-                    1. <strong>Public endpoints:</strong> Expose health check endpoints publicly
-                    <br />
-                    2. <strong>Private agents:</strong> Deploy our lightweight agent in your VPC or on-premise to monitor internal services
+                    Because checks run from our hosted worker, the endpoint must be reachable over the public internet. For internal services, expose a health check endpoint publicly or route traffic through a tunnel.
                   </p>
                 </div>
               </div>

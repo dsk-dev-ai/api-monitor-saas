@@ -24,8 +24,8 @@ curl -fsSL https://raw.githubusercontent.com/your-org/api-monitor-saas/main/scri
 # 1. Update system
 sudo apt update && sudo apt upgrade -y
 
-# 2. Install Node.js 20
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+# 2. Install Node.js 22
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
 sudo apt install -y nodejs
 
 # 3. Install Docker

@@ -1,5 +1,4 @@
-import axios, { AxiosError } from 'axios';
-import { logger } from '../utils/logger';
+import axios, { AxiosError, Method } from 'axios';
 
 export interface CheckResult {
   status: 'up' | 'down' | 'degraded';
@@ -10,7 +9,7 @@ export interface CheckResult {
 
 export async function executeCheck(
   url: string,
-  method: string = 'GET',
+  method: Method = 'GET',
   headers: Record<string, string> = {},
   body?: string,
   timeout: number = 30000,
@@ -21,7 +20,7 @@ export async function executeCheck(
 
   try {
     const response = await axios({
-      method: method as any,
+      method,
       url,
       headers: {
         'User-Agent': 'API-Monitor/1.0',

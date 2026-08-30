@@ -16,7 +16,7 @@ export default function CreateMonitorPage() {
       if (result.success) {
         // Close wizard and redirect to monitors list
         setIsWizardOpen(false);
-        router.push('/(dashboard)/monitors');
+        router.push('/monitors');
       } else {
         throw new Error(result.error || 'Failed to create monitor');
       }
@@ -29,12 +29,12 @@ export default function CreateMonitorPage() {
 
   const handleWizardCancel = () => {
     setIsWizardOpen(false);
-    router.push('/(dashboard)/monitors');
+    router.push('/monitors');
   };
 
   if (!isWizardOpen) {
     // Redirect to monitors list if wizard is closed
-    router.push('/(dashboard)/monitors');
+    router.push('/monitors');
     return null;
   }
 

@@ -1,10 +1,11 @@
+import { Prisma } from '@prisma/client';
 import { prisma } from '../config/database';
 
 export const checkService = {
   /**
    * Store a check result
    */
-  async storeCheckResult(data: any) {
+  async storeCheckResult(data: Prisma.CheckUncheckedCreateInput) {
     return await prisma.check.create({
       data,
     });

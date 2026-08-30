@@ -35,23 +35,23 @@ prisma;
 }
 
 prisma.$on(
-'error' as never,
-(e: any) => {
-console.error(
-'[DATABASE ERROR]',
-e
-);
-}
+  'error' as never,
+  (e: unknown) => {
+    console.error(
+      '[DATABASE ERROR]',
+      e
+    );
+  }
 );
 
 prisma.$on(
-'warn' as never,
-(e: any) => {
-console.warn(
-'[DATABASE WARNING]',
-e
-);
-}
+  'warn' as never,
+  (e: unknown) => {
+    console.warn(
+      '[DATABASE WARNING]',
+      e
+    );
+  }
 );
 
 export async function verifyDatabaseConnection() {

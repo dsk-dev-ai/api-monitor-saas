@@ -1,10 +1,11 @@
+import { Prisma } from '@prisma/client';
 import { prisma } from '../config/database';
 
 export const alertService = {
   /**
    * Create an alert
    */
-  async createAlert(data: any) {
+  async createAlert(data: Prisma.AlertUncheckedCreateInput) {
     return await prisma.alert.create({
       data,
     });
