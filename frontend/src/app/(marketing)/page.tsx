@@ -30,8 +30,8 @@ export default function MarketingHomePage() {
               Monitor Your APIs in Real-Time
             </h1>
             <p className="mb-8 max-w-2xl mx-auto text-lg text-gray-600">
-              Get instant alerts when your APIs go down, slow down, or return errors. 
-              Track performance, uptime, and reliability with powerful analytics.
+              Get email alerts when your APIs go down or return unexpected responses. 
+              Track uptime and response times with the analytics dashboard.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
@@ -76,7 +76,7 @@ export default function MarketingHomePage() {
                 Real-time Monitoring
               </h3>
               <p className="text-gray-600">
-                Monitor API endpoints every minute with instant notifications when issues are detected.
+                Regular HTTP health checks on your API endpoints, with email alerts when issues are detected.
               </p>
             </motion.div>
 
@@ -92,7 +92,7 @@ export default function MarketingHomePage() {
                 Intelligent Alerting
               </h3>
               <p className="text-gray-600">
-                Smart alerting with deduplication, escalation policies, and multiple notification channels.
+                Email alerts whenever a monitor changes status, so your team learns about outages as they happen.
               </p>
             </motion.div>
 
@@ -108,7 +108,7 @@ export default function MarketingHomePage() {
                 Performance Analytics
               </h3>
               <p className="text-gray-600">
-                Deep insights into response times, throughput, and error rates with historical trends.
+                Uptime and response-time analytics with historical trends on your dashboard.
               </p>
             </motion.div>
 
@@ -121,10 +121,10 @@ export default function MarketingHomePage() {
                 <Database className="h-8 w-8 text-indigo-600" />
               </div>
               <h3 className="mb-3 text-xl font-semibold text-gray-900">
-                Uptime SLA Tracking
+                Uptime Tracking
               </h3>
               <p className="text-gray-600">
-                Track service level agreements with detailed uptime reports and compliance reporting.
+                Track uptime over time and see historical uptime data for every monitor.
               </p>
             </motion.div>
 
@@ -137,10 +137,10 @@ export default function MarketingHomePage() {
                 <Layers2 className="h-8 w-8 text-pink-600" />
               </div>
               <h3 className="mb-3 text-xl font-semibold text-gray-900">
-                Multi-region Monitoring
+                Flexible HTTP Checks
               </h3>
               <p className="text-gray-600">
-                Monitor from multiple geographic locations to ensure global availability and performance.
+                Configure each check with its HTTP method, expected status, and optional response keyword validation.
               </p>
             </motion.div>
 
@@ -156,7 +156,7 @@ export default function MarketingHomePage() {
                 Public Status Pages
               </h3>
               <p className="text-gray-600">
-                Beautiful, customizable status pages to keep your users informed during incidents.
+                Share a public status page per monitor so your users can see uptime and response-time history.
               </p>
             </motion.div>
           </div>
@@ -212,7 +212,7 @@ export default function MarketingHomePage() {
                 Set Monitoring Rules
               </h3>
               <p className="text-gray-600">
-                Configure alert thresholds, notification channels, and monitoring frequency.
+                Configure the check interval and which email addresses to notify on status changes.
               </p>
             </motion.div>
 
@@ -293,28 +293,8 @@ export default function MarketingHomePage() {
                   Company
                 </h4>
                 <nav className="space-y-1">
-                  <Link href="/about" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
-                    About Us
-                  </Link>
                   <Link href="/blog" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
                     Blog
-                  </Link>
-                  <Link href="/contact" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
-                    Contact
-                  </Link>
-                </nav>
-              </div>
-              
-              <div className="space-y-2">
-                <h4 className="mb-2 text-sm font-medium text-gray-900">
-                  Legal
-                </h4>
-                <nav className="space-y-1">
-                  <Link href="/terms" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
-                    Terms of Service
-                  </Link>
-                  <Link href="/privacy" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
-                    Privacy Policy
                   </Link>
                 </nav>
               </div>

@@ -12,7 +12,7 @@ export default function FeaturesPage() {
               Powerful API Monitoring Features
             </h1>
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-              Comprehensive API monitoring solution designed for developers and teams who demand reliability, performance, and security from their APIs.
+              Comprehensive API monitoring solution designed for developers and teams who demand reliability and performance from their APIs.
             </p>
           </div>
         </div>
@@ -29,23 +29,23 @@ export default function FeaturesPage() {
                   <Activity className="w-6 h-6 text-blue-600" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white ml-4">
-                  Real-time Monitoring
+                  HTTP Monitoring
                 </h3>
               </div>
               <p className="text-gray-600 dark:text-gray-300 mb-4">
-                Monitor your APIs 24/7 with instant alerts when issues arise. Get notified immediately via email, SMS, Slack, or webhook when your APIs experience downtime, slow response times, or errors.
+                Monitor your HTTP API endpoints around the clock with checks run from a background worker. Get email alerts when a check fails or a monitor changes status.
               </p>
               <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
                 <span>• </span>
-                <span>Sub-second detection</span>
+                <span>Configurable check intervals</span>
               </div>
               <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mt-1">
                 <span>• </span>
-                <span>Global monitoring locations</span>
+                <span>Expected status &amp; keyword validation</span>
               </div>
               <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mt-1">
                 <span>• </span>
-                <span>Customizable alert thresholds</span>
+                <span>Pause or resume monitors anytime</span>
               </div>
             </div>
 
@@ -60,38 +60,38 @@ export default function FeaturesPage() {
                 </h3>
               </div>
               <p className="text-gray-600 dark:text-gray-300 mb-4">
-                Deep insights into your API performance with detailed metrics, historical trends, and benchmarking capabilities. Identify bottlenecks and optimize your APIs for maximum performance.
+                Track uptime and response-time metrics for your APIs with historical trends on the analytics dashboard.
               </p>
               <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
                 <span>• </span>
-                <span>Response time tracking</span>
+                <span>Response-time tracking</span>
               </div>
               <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mt-1">
                 <span>• </span>
-                <span>Throughput and error rates</span>
+                <span>Uptime percentage per monitor</span>
               </div>
               <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mt-1">
                 <span>• </span>
-                <span>Performance benchmarking</span>
+                <span>Historical trends</span>
               </div>
             </div>
 
-            {/* Uptime SLA Tracking */}
+            {/* Uptime Tracking */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
               <div className="flex items-center mb-4">
                 <div className="w-12 h-12 bg-yellow-500/10 rounded-lg flex items-center justify-center">
                   <Clock className="w-6 h-6 text-yellow-600" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white ml-4">
-                  Uptime SLA Tracking
+                  Uptime Tracking
                 </h3>
               </div>
               <p className="text-gray-600 dark:text-gray-300 mb-4">
-                Track your API uptime against SLA commitments with automated reporting. Generate compliance reports and demonstrate reliability to stakeholders and customers.
+                See uptime for each monitor over time and review historical uptime data on the analytics dashboard.
               </p>
               <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
                 <span>• </span>
-                <span>SLA compliance reporting</span>
+                <span>Per-monitor uptime percentage</span>
               </div>
               <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mt-1">
                 <span>• </span>
@@ -99,7 +99,7 @@ export default function FeaturesPage() {
               </div>
               <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mt-1">
                 <span>• </span>
-                <span>Custom SLA definitions</span>
+                <span>Alert history</span>
               </div>
             </div>
 
@@ -114,19 +114,19 @@ export default function FeaturesPage() {
                 </h3>
               </div>
               <p className="text-gray-600 dark:text-gray-300 mb-4">
-                Advanced error detection with detailed diagnostics including status codes, response headers, and response bodies. Quickly identify and troubleshoot API issues before they impact your users.
+                Detect failures with expected status codes and optional response keyword validation, and review triggered alerts in the dashboard.
               </p>
               <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
                 <span>• </span>
-                <span>HTTP status code monitoring</span>
+                <span>HTTP status code checks</span>
               </div>
               <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mt-1">
                 <span>• </span>
-                <span>Response body analysis</span>
+                <span>Response keyword validation</span>
               </div>
               <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mt-1">
                 <span>• </span>
-                <span>Header inspection</span>
+                <span>Alert on down, degraded, or recovery</span>
               </div>
             </div>
 
@@ -141,19 +141,10 @@ export default function FeaturesPage() {
                 </h3>
               </div>
               <p className="text-gray-600 dark:text-gray-300 mb-4">
-                Monitor your APIs for security vulnerabilities and suspicious activities. Detect potential threats including unauthorized access attempts, data breaches, and anomalous behavior patterns.
+                SSL certificate checks and security monitoring are on our roadmap.
               </p>
-              <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                <span>• </span>
-                <span>SSL certificate monitoring</span>
-              </div>
-              <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mt-1">
-                <span>• </span>
-                <span>Unauthorized access detection</span>
-              </div>
-              <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mt-1">
-                <span>• </span>
-                <span>Security header validation</span>
+              <div className="inline-flex items-center rounded-full bg-purple-100 dark:bg-purple-900/40 px-3 py-1 text-xs font-medium text-purple-700 dark:text-purple-300">
+                Planned
               </div>
             </div>
 
@@ -168,19 +159,10 @@ export default function FeaturesPage() {
                 </h3>
               </div>
               <p className="text-gray-600 dark:text-gray-300 mb-4">
-                Create personalized dashboards with drag-and-drop widgets to visualize the metrics that matter most to you and your team. Share insights with stakeholders through public or private links.
+                Drag-and-drop customizable dashboards are on our roadmap. Today, the analytics dashboard shows uptime and response-time metrics.
               </p>
-              <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                <span>• </span>
-                <span>Drag-and-drop interface</span>
-              </div>
-              <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mt-1">
-                <span>• </span>
-                <span>Custom widget creation</span>
-              </div>
-              <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mt-1">
-                <span>• </span>
-                <span>Shareable dashboard links</span>
+              <div className="inline-flex items-center rounded-full bg-indigo-100 dark:bg-indigo-900/40 px-3 py-1 text-xs font-medium text-indigo-700 dark:text-indigo-300">
+                Planned
               </div>
             </div>
 
@@ -195,19 +177,10 @@ export default function FeaturesPage() {
                 </h3>
               </div>
               <p className="text-gray-600 dark:text-gray-300 mb-4">
-                Collaborate effectively with role-based access controls, incident management, and shared incident timelines. Keep your entire team informed and aligned during API incidents.
+                Full team collaboration features are on our roadmap.
               </p>
-              <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                <span>• </span>
-                <span>Role-based permissions</span>
-              </div>
-              <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mt-1">
-                <span>• </span>
-                <span>Incident management</span>
-              </div>
-              <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mt-1">
-                <span>• </span>
-                <span>Shared incident timelines</span>
+              <div className="inline-flex items-center rounded-full bg-teal-100 dark:bg-teal-900/40 px-3 py-1 text-xs font-medium text-teal-700 dark:text-teal-300">
+                Planned
               </div>
             </div>
 
@@ -222,19 +195,10 @@ export default function FeaturesPage() {
                 </h3>
               </div>
               <p className="text-gray-600 dark:text-gray-300 mb-4">
-                Seamlessly integrate with your existing API documentation (OpenAPI/Swagger, Postman collections, etc.) to automatically validate responses against schemas and detect breaking changes.
+                Response validation against OpenAPI schemas and API documentation integration are on our roadmap.
               </p>
-              <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
-                <span>• </span>
-                <span>OpenAPI/Swagger validation</span>
-              </div>
-              <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mt-1">
-                <span>• </span>
-                <span>Postman collection support</span>
-              </div>
-              <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mt-1">
-                <span>• </span>
-                <span>Schema drift detection</span>
+              <div className="inline-flex items-center rounded-full bg-orange-100 dark:bg-orange-900/40 px-3 py-1 text-xs font-medium text-orange-700 dark:text-orange-300">
+                Planned
               </div>
             </div>
 
@@ -245,23 +209,23 @@ export default function FeaturesPage() {
                   <ArrowUpRight className="w-6 h-6 text-rose-600" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white ml-4">
-                  Advanced Alerting
+                  Email Alerting
                 </h3>
               </div>
               <p className="text-gray-600 dark:text-gray-300 mb-4">
-                Intelligent alerting system with deduplication, escalation policies, and smart notification routing. Reduce alert fatigue while ensuring critical issues never go unnoticed.
+                Receive email alerts when a monitor goes down, is degraded, or recovers, and review the full alert history in the dashboard.
               </p>
               <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
                 <span>• </span>
-                <span>Alert deduplication</span>
+                <span>Alerts on down, degraded, and recovery</span>
               </div>
               <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mt-1">
                 <span>• </span>
-                <span>Escalation policies</span>
+                <span>Triggered &amp; resolved states</span>
               </div>
               <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mt-1">
                 <span>• </span>
-                <span>Smart notification routing</span>
+                <span>Acknowledge alerts from the dashboard</span>
               </div>
             </div>
           </div>
@@ -278,10 +242,10 @@ export default function FeaturesPage() {
             Start monitoring your APIs today and gain the insights you need to deliver exceptional user experiences.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/(marketing)/pricing" className="flex-1 px-8 py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+            <Link href="/pricing" className="flex-1 px-8 py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
               View Pricing
             </Link>
-            <Link href="/(auth)/sign-up" className="flex-1 px-8 py-4 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors font-medium">
+            <Link href="/signup" className="flex-1 px-8 py-4 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors font-medium">
               Start Free Trial
             </Link>
           </div>
