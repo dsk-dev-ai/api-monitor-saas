@@ -149,9 +149,25 @@ Backend unit/integration-route tests cover monitors, checks, and alerts (12 test
 - [ ] Team workspaces, status-page management UI, Stripe billing wiring in the dashboard
 - [ ] Multi-region checks, more notification channels
 
-## Contributing
+## Community
 
-Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for the workflow and our [Code of Conduct](CODE_OF_CONDUCT.md).
+- **Discussions:** [GitHub Discussions](https://github.com/dsk-dev-ai/api-monitor-saas/discussions) — Q&A, ideas, show & tell
+- **Issues:** [Report a bug](https://github.com/dsk-dev-ai/api-monitor-saas/issues/new?assignees=&labels=bug&template=bug_report.md) · [Request a feature](https://github.com/dsk-dev-ai/api-monitor-saas/issues/new?assignees=&labels=enhancement&template=feature_request.md)
+- **Code of conduct:** [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
+- **Security:** [SECURITY.md](SECURITY.md)
+- **Contributing:** [CONTRIBUTING.md](CONTRIBUTING.md)
+
+## Sponsor
+
+API Monitor SaaS is built and maintained by [Darshan Kachare](https://github.com/dsk-dev-ai) through [NextGenAI Labs](https://github.com/sponsors/dsk-dev-ai).
+
+Sponsorship supports development infrastructure, documentation, and long-term maintenance of this open-source platform.
+
+<a href="https://github.com/sponsors/dsk-dev-ai">
+  <img src="https://img.shields.io/badge/%E2%9D%A4%EF%B8%8F-Sponsor_on_GitHub-red?style=for-the-badge&logo=githubsponsors&logoColor=white" alt="Sponsor API Monitor SaaS"/>
+</a>
+
+---
 
 ## License
 
