@@ -1,7 +1,7 @@
 {
   "name": "api-monitor-saas",
   "version": "2.0.0",
-  "description": "API Monitor SaaS - v1 MVP",
+  "description": "Open-source API & website uptime monitoring SaaS — periodic health checks, uptime analytics, email alerts, and public status pages. Next.js + Express + Prisma + monitoring worker.",
   "private": true,
   "workspaces": [
     "frontend",
