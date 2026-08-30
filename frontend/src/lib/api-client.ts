@@ -53,7 +53,14 @@ api.interceptors.response.use(
       }
     }
 
-    return Promise.reject(error);
+    const backendMessage =
+      error.response?.data?.error ||
+      error.response?.data?.details?.[0]?.message ||
+      (error.response
+        ? `Request failed with status code ${error.response.status}`
+        : error.message || 'Network error');
+
+    return Promise.reject(new Error(backendMessage));
   }
 );
 

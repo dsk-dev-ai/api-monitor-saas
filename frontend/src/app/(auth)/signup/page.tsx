@@ -95,6 +95,9 @@ export default function SignupPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
+              <p className="text-xs text-muted-foreground">
+                Minimum 8 characters with at least one letter and one number.
+              </p>
             </div>
 
             {error && (
