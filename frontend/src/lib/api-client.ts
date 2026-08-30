@@ -39,7 +39,7 @@ api.interceptors.response.use(
       }
 
       try {
-        const { data } = await api.post('/auth/refresh', { refreshToken });
+        const { data } = await api.post('/auth/refresh', { refresh_token: refreshToken });
         if (typeof window !== 'undefined') {
           localStorage.setItem('access_token', data.access_token);
         }
