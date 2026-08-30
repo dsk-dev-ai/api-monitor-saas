@@ -10,19 +10,13 @@ module.exports = [
       ecmaVersion: 2020,
       sourceType: 'module',
       globals: {
-        // Node.js globals
         process: 'readonly',
         console: 'readonly',
         __dirname: 'readonly',
-        // Jest globals for test files
-        describe: 'readonly',
-        it: 'readonly',
-        expect: 'readonly',
-        jest: 'readonly',
-        beforeEach: 'readonly',
-        afterEach: 'readonly',
-        beforeAll: 'readonly',
-        afterAll: 'readonly'
+        setInterval: 'readonly',
+        setTimeout: 'readonly',
+        clearInterval: 'readonly',
+        clearTimeout: 'readonly'
       }
     },
     plugins: {

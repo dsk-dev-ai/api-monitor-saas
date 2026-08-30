@@ -1,6 +1,8 @@
 import cron from 'node-cron';
 import dotenv from 'dotenv';
-dotenv.config();
+import path from 'path';
+import type { Method } from 'axios';
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 import { prisma } from './lib/prisma';
 import { executeCheck } from './services/executor';
@@ -70,7 +72,7 @@ async function runChecks() {
           try {
             const result = await executeCheck(
               monitor.url,
-              monitor.method,
+              monitor.method as Method,
               (monitor.headers as Record<string, string>) || {},
               monitor.body || undefined,
               monitor.timeout * 1000,

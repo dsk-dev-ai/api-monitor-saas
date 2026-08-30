@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import { prisma } from '../config/database';
 import { PLAN_LIMITS } from '../types';
 import { AppError } from '../middleware/error';
@@ -80,7 +81,7 @@ export const monitorService = {
   /**
    * Create a new monitor
    */
-  async createMonitor(data: any, userId: string) {
+  async createMonitor(data: Omit<Prisma.MonitorUncheckedCreateInput, 'userId'>, userId: string) {
     // Check plan limits
     const subscription = await prisma.subscription.findUnique({
       where: { userId },
@@ -120,7 +121,7 @@ export const monitorService = {
   /**
    * Update a monitor
    */
-  async updateMonitor(id: string, data: any, userId: string) {
+  async updateMonitor(id: string, data: Prisma.MonitorUncheckedUpdateInput, userId: string) {
     const existing = await prisma.monitor.findFirst({
       where: { id, userId },
     });
@@ -129,14 +130,14 @@ export const monitorService = {
       throw new AppError('Monitor not found', 404);
     }
 
-    if (data.interval) {
+    if (typeof data.interval === 'number') {
       const subscription = await prisma.subscription.findUnique({
         where: { userId },
       });
       const plan = subscription?.plan || 'free';
       const limits = PLAN_LIMITS[plan];
 
-      if (data.interval < limits.minInterval) {
+if ((data.interval ?? 300) < limits.minInterval) {
         throw new AppError(
           `Minimum check interval for ${plan} plan is ${limits.minInterval} seconds`,
           400

@@ -1,11 +1,8 @@
+'use client';
+
 import Link from 'next/link';
 import { MotionProps, motion, Variants } from 'framer-motion';
 import { ArrowUpRight, ShieldCheck, Zap, Clock, Database, Layers2 } from 'lucide-react';
-
-export const metadata = {
-  title: 'API Monitor - Real-time API Monitoring & Alerting',
-  description: 'Monitor your APIs in real-time with instant alerts, performance analytics, and uptime tracking. Never miss an API issue again.',
-};
 
 const fadeIn: Variants = {
   initial: { opacity: 0, y: 20 },
