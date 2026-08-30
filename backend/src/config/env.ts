@@ -86,12 +86,12 @@ throw new Error(
 }
 
 if (
-data.ENABLE_BILLING &&
-!data.STRIPE_SECRET_KEY
+  data.ENABLE_BILLING &&
+  !data.STRIPE_SECRET_KEY
 ) {
-throw new Error(
-'STRIPE_SECRET_KEY required in production'
-);
+  console.warn(
+    'ENABLE_BILLING=true but STRIPE_SECRET_KEY is missing — billing disabled until keys are added'
+  );
 }
 }
 

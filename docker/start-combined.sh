@@ -1,7 +1,7 @@
 #!/bin/sh
 # Starts the Express API and the monitoring worker in a single container.
 # The worker (background checks) needs no public port; the API listens on 3001.
-set -e
+# POSIX-only: Render's image uses dash, so no bashisms (no `wait -n`).
 
 echo "[entrypoint] starting API + worker"
 
@@ -18,7 +18,6 @@ trap 'kill $API_PID $WORKER_PID 2>/dev/null || true' INT TERM
 
 # Restart children if they exit unexpectedly; keep the container alive
 while true; do
-  wait -n $API_PID $WORKER_PID || true
   if ! kill -0 $API_PID 2>/dev/null; then
     echo "[entrypoint] API exited — restarting"
     node /app/backend/dist/server.js &
