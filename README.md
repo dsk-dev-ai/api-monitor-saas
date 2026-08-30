@@ -145,7 +145,7 @@ Backend unit/integration-route tests cover monitors, checks, and alerts (12 test
 
 - [x] v1.0 — MVP: monitoring, alerts, billing
 - [x] v2.0 — Auth, dashboard, monitor management, analytics, alert system, worker service
-- [ ] v3.0 — polished marketing site, accurate docs, professionalization pass (in progress)
+- [x] v3.0 — Professionalization: accurate claims/docs, community files, web fixes
 - [ ] Team workspaces, status-page management UI, Stripe billing wiring in the dashboard
 - [ ] Multi-region checks, more notification channels
 
