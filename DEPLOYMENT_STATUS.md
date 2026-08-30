@@ -21,9 +21,16 @@
   - **Stripe** — billing is disabled by design while there are no paying customers. `ENABLE_BILLING=true` but a missing `STRIPE_SECRET_KEY` logs a warning and disables checkout; the UI degrades gracefully. Add Stripe keys only when there is a real need (see below).
   - **Redis** — `REDIS_URL` is unused/optional; the worker runs in-process on an interval.
 
-## Still needed before welcoming paying customers
+## Signup / email — RESOLVED
 
-1. **Email sending (signup confirmation)** — hosted Supabase confirms accounts by email, which requires a verified SMTP sender (e.g. Resend). Without it, new visitors cannot complete signup. This is the highest-priority item for real traffic.
-2. **Stripe (only when ready to charge)** — add `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_BASIC/PRO`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` to Render, and point the webhook at `/api/v1/billing/webhook`.
+- **Email delivery works.** Supabase custom SMTP is wired to **Resend** (`smtp.resend.com`). "Confirm sign up" is enabled and confirmation emails are sent, delivered, and opened (verified in Resend's logs).
+- **Verified end-to-end:** a live signup against the deployed API returns `201 "Account created successfully. Please check your email to verify."` and the confirmation email reaches the visitor's inbox.
+- **Visitors can now fully onboard:** sign up → receive confirmation → verify → log in.
+
+## Deferred by design (not blockers)
+
+Only **Stripe** remains intentionally disabled while there are no paying customers. `ENABLE_BILLING=true` but a missing `STRIPE_SECRET_KEY` logs a warning and disables checkout; the UI degrades gracefully. To enable when ready, add `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_BASIC/PRO`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` to Render and point the webhook at `/api/v1/billing/webhook`.
+
+To also route the worker's uptime **alert** emails through Resend (they currently use the backend default transport), add `RESEND_API_KEY` and `FROM_EMAIL` to the Render service.
 
 Everything else — signup, signin, monitor management, background checks, analytics, alerts, public status pages — is verified working on the live deployment.
