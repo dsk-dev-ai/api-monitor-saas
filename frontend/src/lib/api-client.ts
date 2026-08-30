@@ -1,7 +1,8 @@
 import axios from 'axios';
+import { getApiV1BaseUrl } from './api-url';
 
 const api = axios.create({
-  baseURL: `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/v1`,
+  baseURL: getApiV1BaseUrl(),
 });
 
 // Request interceptor to add auth token
