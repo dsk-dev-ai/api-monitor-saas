@@ -156,7 +156,7 @@ database:
 app.get('/', (_req, res) => {
 res.json({
     name: 'API Monitor SaaS',
-    version: '3.0.0',
+    version: '3.5.0',
     status: 'running',
 endpoints: {
 auth: '/api/v1/auth',

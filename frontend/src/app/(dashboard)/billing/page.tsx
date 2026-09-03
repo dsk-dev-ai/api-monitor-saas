@@ -8,6 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { api } from '@/lib/api-client';
 import { useAuthStore } from '@/stores/auth-store';
+import { Reveal, Stagger, MotionDiv } from '@/components/motion/motion-primitives';
+import { Check } from 'lucide-react';
 
 interface Plan {
   id: string;
@@ -126,73 +128,75 @@ export default function BillingPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h2 className="text-2xl font-bold">Billing</h2>
-        <p className="text-muted-foreground">
+      <MotionDiv>
+        <h2 className="font-display text-2xl font-semibold tracking-tight">Billing</h2>
+        <p className="mt-1 text-muted-foreground">
           Your current plan, usage, and upgrade options.
         </p>
-      </div>
+      </MotionDiv>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 
       {subscription && (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  {currentPlan === 'free' ? 'Free' : `${currentPlan[0].toUpperCase()}${currentPlan.slice(1)}`}
-                  Plan
-                  <Badge variant={currentPlan === 'free' ? 'secondary' : 'default'}>
-                    {currentPlan === 'free' ? 'Free' : subscription.status}
-                  </Badge>
-                </CardTitle>
-                <CardDescription>
-                  {subscription.limits.maxMonitors} monitors max · {subscription.limits.minInterval}s minimum interval ·{' '}
-                  {subscription.limits.maxTeamMembers} team member{subscription.limits.maxTeamMembers === 1 ? '' : 's'}
-                </CardDescription>
+        <Reveal>
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    {currentPlan === 'free' ? 'Free' : `${currentPlan[0].toUpperCase()}${currentPlan.slice(1)}`}
+                    Plan
+                    <Badge variant={currentPlan === 'free' ? 'secondary' : 'default'}>
+                      {currentPlan === 'free' ? 'Free' : subscription.status}
+                    </Badge>
+                  </CardTitle>
+                  <CardDescription>
+                    {subscription.limits.maxMonitors} monitors max · {subscription.limits.minInterval}s minimum interval ·{' '}
+                    {subscription.limits.maxTeamMembers} team member{subscription.limits.maxTeamMembers === 1 ? '' : 's'}
+                  </CardDescription>
+                </div>
+                <div className="text-right">
+                  <p className="font-display text-2xl font-bold tracking-tight">
+                    {subscription.usage.monitors}/{subscription.limits.maxMonitors}
+                  </p>
+                  <p className="text-sm text-muted-foreground">monitors used</p>
+                </div>
               </div>
-              <div className="text-right">
-                <p className="text-2xl font-bold">
-                  {subscription.usage.monitors}/{subscription.limits.maxMonitors}
-                </p>
-                <p className="text-sm text-muted-foreground">monitors used</p>
+            </CardHeader>
+            <CardContent>
+              <div className="mb-6 h-2 w-full overflow-hidden rounded-full bg-muted">
+                <div
+                  className="h-2 rounded-full bg-gradient-brand transition-all"
+                  style={{
+                    width: `${Math.min(100, (subscription.usage.monitors / Math.max(1, subscription.limits.maxMonitors)) * 100)}%`,
+                  }}
+                />
               </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="mb-6 h-2 w-full rounded-full bg-muted">
-              <div
-                className="h-2 rounded-full bg-primary"
-                style={{
-                  width: `${Math.min(100, (subscription.usage.monitors / Math.max(1, subscription.limits.maxMonitors)) * 100)}%`,
-                }}
-              />
-            </div>
-            <div className="flex flex-wrap gap-3">
-              {currentPlan !== 'free' && (
-                <Button variant="outline" onClick={manageBilling} disabled={action === 'portal'}>
-                  {action === 'portal' && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Manage Subscription
+              <div className="flex flex-wrap gap-3">
+                {currentPlan !== 'free' && (
+                  <Button variant="outline" onClick={manageBilling} disabled={action === 'portal'}>
+                    {action === 'portal' && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Manage Subscription
+                  </Button>
+                )}
+                <Button asChild variant="ghost">
+                  <Link href="/pricing">Compare Plans</Link>
                 </Button>
-              )}
-              <Button asChild variant="ghost">
-                <Link href="/pricing">Compare Plans</Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+              </div>
+            </CardContent>
+          </Card>
+        </Reveal>
       )}
 
       <div>
-        <h3 className="mb-4 text-lg font-semibold">Available Plans</h3>
-        <div className="grid gap-6 md:grid-cols-3">
+        <h3 className="mb-4 font-display text-lg font-semibold tracking-tight">Available Plans</h3>
+        <Stagger className="grid gap-6 md:grid-cols-3">
           {plans.map((plan) => {
             const isCurrent = plan.id === currentPlan;
             return (
               <Card
                 key={plan.id}
-                className={plan.popular ? 'border-primary ring-2 ring-primary/20' : ''}
+                className={plan.popular ? 'border-primary/40 ring-2 ring-primary/20 glow-soft' : ''}
               >
                 <CardHeader>
                   <div className="flex items-center justify-between">
@@ -202,7 +206,7 @@ export default function BillingPage() {
                     </CardTitle>
                   </div>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-3xl font-bold">${plan.price}</span>
+                    <span className="font-display text-3xl font-bold tracking-tight">${plan.price}</span>
                     <span className="text-sm text-muted-foreground">/month</span>
                   </div>
                   <CardDescription>{plan.description}</CardDescription>
@@ -211,16 +215,16 @@ export default function BillingPage() {
                   <div className="space-y-2">
                     {plan.features.map((feature) => (
                       <p key={feature} className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <span className="text-green-500">✓</span>
+                        <Check className="h-4 w-4 text-emerald-400" />
                         {featureLabels[feature] || feature}
                       </p>
                     ))}
                     <p className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <span className="text-green-500">✓</span>
+                      <Check className="h-4 w-4 text-emerald-400" />
                       {plan.limits.maxMonitors} monitors
                     </p>
                     <p className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <span className="text-green-500">✓</span>
+                      <Check className="h-4 w-4 text-emerald-400" />
                       {plan.limits.minInterval}s check interval
                     </p>
                   </div>
@@ -250,7 +254,7 @@ export default function BillingPage() {
               </Card>
             );
           })}
-        </div>
+        </Stagger>
         {!billingEnabled && (
           <p className="mt-4 text-sm text-muted-foreground">
             Billing is not configured on this deployment yet.
@@ -258,8 +262,8 @@ export default function BillingPage() {
         )}
       </div>
 
-      <div className="border-t pt-6">
-        <Link href="/dashboard" className="text-sm text-muted-foreground hover:text-foreground">
+      <div className="border-t border-border/60 pt-6">
+        <Link href="/dashboard" className="text-sm text-muted-foreground transition-colors hover:text-foreground">
           ← Back to Dashboard
         </Link>
       </div>

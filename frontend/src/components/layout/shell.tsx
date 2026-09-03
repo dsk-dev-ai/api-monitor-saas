@@ -15,7 +15,7 @@ export function DashboardShell({ children, className }: DashboardShellProps) {
       <Sidebar />
       <div className="pl-64 transition-all duration-300">
         <Header />
-        <main className={cn('p-6', className)}>{children}</main>
+        <main className={cn('p-6 md:p-8', className)}>{children}</main>
       </div>
     </div>
   );

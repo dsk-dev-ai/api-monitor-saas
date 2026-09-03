@@ -1,311 +1,275 @@
 'use client';
 
 import Link from 'next/link';
-import { MotionProps, motion, Variants } from 'framer-motion';
-import { ArrowUpRight, ShieldCheck, Zap, Clock, Database, Layers2 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import {
+  Activity,
+  ArrowRight,
+  BellRing,
+  Gauge,
+  LineChart,
+  RadioTower,
+  ShieldCheck,
+  Share2,
+  Zap,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
-const fadeIn: Variants = {
-  initial: { opacity: 0, y: 20 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.6 } },
-  exit: { opacity: 0, y: -20 },
+const featureGroups = [
+  {
+    title: 'HTTP Monitoring',
+    desc: 'Regular HTTP health checks on your API endpoints, with email alerts when issues are detected.',
+    icon: RadioTower,
+  },
+  {
+    title: 'Intelligent Alerting',
+    desc: 'Email alerts whenever a monitor changes status, so your team learns about outages as they happen.',
+    icon: BellRing,
+  },
+  {
+    title: 'Performance Analytics',
+    desc: 'Uptime and response-time analytics with historical trends on your dashboard.',
+    icon: Gauge,
+  },
+  {
+    title: 'Uptime Tracking',
+    desc: 'Track uptime over time and see historical uptime data for every monitor.',
+    icon: LineChart,
+  },
+  {
+    title: 'Flexible HTTP Checks',
+    desc: 'Configure each check with its HTTP method, expected status, and optional response keyword validation.',
+    icon: Zap,
+  },
+  {
+    title: 'Public Status Pages',
+    desc: 'Share a public status page per monitor so your users can see uptime and response-time history.',
+    icon: Share2,
+  },
+];
+
+const steps = [
+  {
+    num: '01',
+    title: 'Add Your Endpoints',
+    desc: 'Add your API endpoints with URL, method, headers, and expected responses.',
+  },
+  {
+    num: '02',
+    title: 'Set Monitoring Rules',
+    desc: 'Configure the check interval and which email addresses to notify on status changes.',
+  },
+  {
+    num: '03',
+    title: 'Get Alerts & Insights',
+    desc: 'Receive email alerts and access detailed analytics when issues are detected.',
+  },
+];
+
+const container = {
+  hidden: {},
+  show: {
+    transition: { staggerChildren: 0.12 },
+  },
 };
 
-const staggerContainer: Variants = {
-  initial: {},
-  animate: {
-    transition: {
-      staggerChildren: 0.1,
-    },
+const item = {
+  hidden: { opacity: 0, y: 24 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] as const },
   },
 };
 
 export default function MarketingHomePage() {
   return (
-    <main className="min-h-screen bg-white text-gray-900 antialiased">
-      {/* Hero Section */}
-      <section className="relative bg-gradient-to-b from-gray-50 to-white py-20">
-        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
-          <div className="text-center">
-            <h1 className="mb-6 text-4xl font-bold text-gray-900 sm:text-5xl">
-              Monitor Your APIs Around the Clock
-            </h1>
-            <p className="mb-8 max-w-2xl mx-auto text-lg text-gray-600">
-              Get email alerts when your APIs go down or return unexpected responses. 
-              Track uptime and response times with the analytics dashboard.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                href="/signup"
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-colors duration-200 sm:px-8"
-              >
-                Get Started Free
-              </Link>
-              <Link
-                href="/features"
-                className="flex-1 border border-gray-300 hover:border-gray-400 text-gray-700 hover:text-gray-900 font-medium py-3 px-6 rounded-lg transition-colors duration-200 sm:px-8"
-              >
-                See Features
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
+    <div className="relative overflow-hidden">
+      <motion.section
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.8 }}
+        className="relative"
+      >
+        <div className="pointer-events-none absolute inset-0 bg-grid [mask-image:radial-gradient(ellipse_60%_60%_at_50%_0%,black,transparent)]" />
+        <div className="pointer-events-none absolute -top-40 left-1/2 h-[480px] w-[720px] -translate-x-1/2 rounded-full bg-primary/20 blur-[140px]" />
 
-      {/* Features Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
-          <div className="text-center mb-16">
-            <h2 className="mb-4 text-3xl font-bold text-gray-900">
-              Powerful Features for API Excellence
-            </h2>
-            <p className="max-w-2xl mx-auto text-gray-600">
-              Everything you need to monitor and analyze your APIs
-            </p>
-          </div>
-          
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            <motion.div
-              variants={fadeIn}
-              className="p-6 bg-gray-50 rounded-xl border border-gray-100 hover:border-gray-200 transition-all duration-300"
-              custom={1}
-            >
-              <div className="mb-4">
-                <Zap className="h-8 w-8 text-blue-600" />
-              </div>
-              <h3 className="mb-3 text-xl font-semibold text-gray-900">
-                HTTP Monitoring
-              </h3>
-              <p className="text-gray-600">
-                Regular HTTP health checks on your API endpoints, with email alerts when issues are detected.
-              </p>
-            </motion.div>
-
-            <motion.div
-              variants={fadeIn}
-              className="p-6 bg-gray-50 rounded-xl border border-gray-100 hover:border-gray-200 transition-all duration-300"
-              custom={2}
-            >
-              <div className="mb-4">
-                <ShieldCheck className="h-8 w-8 text-green-600" />
-              </div>
-              <h3 className="mb-3 text-xl font-semibold text-gray-900">
-                Intelligent Alerting
-              </h3>
-              <p className="text-gray-600">
-                Email alerts whenever a monitor changes status, so your team learns about outages as they happen.
-              </p>
-            </motion.div>
-
-            <motion.div
-              variants={fadeIn}
-              className="p-6 bg-gray-50 rounded-xl border border-gray-100 hover:border-gray-200 transition-all duration-300"
-              custom={3}
-            >
-              <div className="mb-4">
-                <Clock className="h-8 w-8 text-purple-600" />
-              </div>
-              <h3 className="mb-3 text-xl font-semibold text-gray-900">
-                Performance Analytics
-              </h3>
-              <p className="text-gray-600">
-                Uptime and response-time analytics with historical trends on your dashboard.
-              </p>
-            </motion.div>
-
-            <motion.div
-              variants={fadeIn}
-              className="p-6 bg-gray-50 rounded-xl border border-gray-100 hover:border-gray-200 transition-all duration-300"
-              custom={4}
-            >
-              <div className="mb-4">
-                <Database className="h-8 w-8 text-indigo-600" />
-              </div>
-              <h3 className="mb-3 text-xl font-semibold text-gray-900">
-                Uptime Tracking
-              </h3>
-              <p className="text-gray-600">
-                Track uptime over time and see historical uptime data for every monitor.
-              </p>
-            </motion.div>
-
-            <motion.div
-              variants={fadeIn}
-              className="p-6 bg-gray-50 rounded-xl border border-gray-100 hover:border-gray-200 transition-all duration-300"
-              custom={5}
-            >
-              <div className="mb-4">
-                <Layers2 className="h-8 w-8 text-pink-600" />
-              </div>
-              <h3 className="mb-3 text-xl font-semibold text-gray-900">
-                Flexible HTTP Checks
-              </h3>
-              <p className="text-gray-600">
-                Configure each check with its HTTP method, expected status, and optional response keyword validation.
-              </p>
-            </motion.div>
-
-            <motion.div
-              variants={fadeIn}
-              className="p-6 bg-gray-50 rounded-xl border border-gray-100 hover:border-gray-200 transition-all duration-300"
-              custom={6}
-            >
-              <div className="mb-4">
-                <ArrowUpRight className="h-8 w-8 text-orange-600" />
-              </div>
-              <h3 className="mb-3 text-xl font-semibold text-gray-900">
-                Public Status Pages
-              </h3>
-              <p className="text-gray-600">
-                Share a public status page per monitor so your users can see uptime and response-time history.
-              </p>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works Section */}
-      <section className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
-          <div className="text-center mb-16">
-            <h2 className="mb-4 text-3xl font-bold text-gray-900">
-              How API Monitor Works
-            </h2>
-            <p className="max-w-2xl mx-auto text-gray-600">
-              Simple setup, powerful monitoring. Get started in minutes.
-            </p>
-          </div>
-          
-          <div className="grid gap-8 md:grid-cols-1 lg:grid-cols-3">
-            <motion.div
-              variants={fadeIn}
-              className="text-center p-8 bg-white rounded-xl border border-gray-100"
-              custom={1}
-            >
-              <div className="mb-6">
-                <div className="inline-flex h-12 w-12 items-center justify-center bg-blue-50 rounded-lg">
-                  <div className="h-6 w-6 bg-blue-600 rounded-full flex items-center justify-center">
-                    1
-                  </div>
-                </div>
-              </div>
-              <h3 className="mb-4 text-xl font-semibold text-gray-900">
-                Add Your Endpoints
-              </h3>
-              <p className="text-gray-600">
-                Simply add your API endpoints with URL, method, headers, and expected responses.
-              </p>
-            </motion.div>
-
-            <motion.div
-              variants={fadeIn}
-              className="text-center p-8 bg-white rounded-xl border border-gray-100"
-              custom={2}
-            >
-              <div className="mb-6">
-                <div className="inline-flex h-12 w-12 items-center justify-center bg-blue-50 rounded-lg">
-                  <div className="h-6 w-6 bg-blue-600 rounded-full flex items-center justify-center">
-                    2
-                  </div>
-                </div>
-              </div>
-              <h3 className="mb-4 text-xl font-semibold text-gray-900">
-                Set Monitoring Rules
-              </h3>
-              <p className="text-gray-600">
-                Configure the check interval and which email addresses to notify on status changes.
-              </p>
-            </motion.div>
-
-            <motion.div
-              variants={fadeIn}
-              className="text-center p-8 bg-white rounded-xl border border-gray-100"
-              custom={3}
-            >
-              <div className="mb-6">
-                <div className="inline-flex h-12 w-12 items-center justify-center bg-blue-50 rounded-lg">
-                  <div className="h-6 w-6 bg-blue-600 rounded-full flex items-center justify-center">
-                    3
-                  </div>
-                </div>
-              </div>
-              <h3 className="mb-4 text-xl font-semibold text-gray-900">
-                Get Alerts & Insights
-              </h3>
-              <p className="text-gray-600">
-                Receive email alerts and access detailed analytics when issues are detected.
-              </p>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="relative py-20 bg-gradient-to-r from-blue-600 to-indigo-600">
-        <div className="max-w-4xl mx-auto px-6 sm:px-8 lg:px-12 text-center">
-          <h2 className="mb-6 text-3xl font-bold text-white">
-            Ready to Monitor Your APIs?
-          </h2>
-          <p className="mb-8 max-w-2xl mx-auto text-blue-50">
-            Get started free and never miss an API issue again.
-          </p>
-          <Link
-            href="/signup"
-            className="inline-block bg-white text-blue-600 hover:bg-blue-50 font-medium py-3 px-8 rounded-lg transition-colors duration-200"
+        <div className="relative mx-auto max-w-7xl px-6 pb-24 pt-20 text-center sm:px-8 sm:pt-28 lg:px-12">
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="mb-6 flex justify-center"
           >
-            Get Started Free
-          </Link>
-        </div>
-      </section>
+            <Badge variant="outline" className="gap-2 px-3 py-1 text-sm">
+              <Activity className="h-3.5 w-3.5 text-primary" />
+              API &amp; Website Uptime Monitoring
+            </Badge>
+          </motion.div>
 
-      {/* Footer Section */}
-      <footer className="py-12 bg-gray-50 border-t border-gray-200">
-        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
-          <div className="flex flex-col sm:flex-row justify-between items-center sm:items-start sm:gap-12">
-            <div className="text-center sm:text-left">
-              <h3 className="mb-4 text-xl font-bold text-gray-900">
-                API Monitor
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="mx-auto max-w-4xl font-display text-4xl font-bold leading-tight tracking-tight sm:text-6xl"
+          >
+            Monitor Your APIs{' '}
+            <span className="text-gradient">Around the Clock</span>
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground"
+          >
+            Get email alerts when your APIs go down or return unexpected
+            responses. Track uptime and response times with a beautiful
+            analytics dashboard.
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row"
+          >
+            <Button asChild size="lg" className="group w-full sm:w-auto">
+              <Link href="/signup">
+                Get Started Free
+                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </Link>
+            </Button>
+            <Button
+              asChild
+              size="lg"
+              variant="outline"
+              className="w-full sm:w-auto"
+            >
+              <Link href="/features">See Features</Link>
+            </Button>
+          </motion.div>
+        </div>
+      </motion.section>
+
+      <motion.section
+        variants={container}
+        initial="hidden"
+        whileInView="show"
+        viewport={{ once: true, margin: '-100px' }}
+        className="relative mx-auto max-w-7xl px-6 py-20 sm:px-8 lg:px-12"
+      >
+        <div className="mb-16 text-center">
+          <motion.span
+            variants={item}
+            className="text-sm font-semibold uppercase tracking-widest text-primary"
+          >
+            Features
+          </motion.span>
+          <motion.h2
+            variants={item}
+            className="mt-3 font-display text-3xl font-bold tracking-tight sm:text-4xl"
+          >
+            Powerful Features for API Excellence
+          </motion.h2>
+          <motion.p variants={item} className="mx-auto mt-4 max-w-2xl text-muted-foreground">
+            Everything you need to monitor and analyze your APIs.
+          </motion.p>
+        </div>
+
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {featureGroups.map((feature) => (
+            <motion.div
+              key={feature.title}
+              variants={item}
+              className="group rounded-2xl border border-border/60 bg-card/60 p-6 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:bg-card hover:glow-soft"
+            >
+              <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-brand text-white shadow-md shadow-primary/25 transition-transform duration-300 group-hover:scale-110">
+                <feature.icon className="h-5 w-5" />
+              </div>
+              <h3 className="mb-2 font-display text-lg font-semibold">
+                {feature.title}
               </h3>
-              <p className="text-gray-600">
-                API & website uptime monitoring with email alerts, built for developers and DevOps teams.
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                {feature.desc}
               </p>
-            </div>
-            
-            <div className="flex flex-col sm:flex-row gap-8 sm:justify-start">
-              <div className="space-y-2">
-                <h4 className="mb-2 text-sm font-medium text-gray-900">
-                  Product
-                </h4>
-                <nav className="space-y-1">
-                  <Link href="/features" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
-                    Features
-                  </Link>
-                  <Link href="/pricing" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
-                    Pricing
-                  </Link>
-                  <Link href="/docs" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
-                    Documentation
-                  </Link>
-                </nav>
-              </div>
-              
-              <div className="space-y-2">
-                <h4 className="mb-2 text-sm font-medium text-gray-900">
-                  Company
-                </h4>
-                <nav className="space-y-1">
-                  <Link href="/blog" className="text-sm text-gray-600 hover:text-gray-900 transition-colors">
-                    Blog
-                  </Link>
-                </nav>
-              </div>
-            </div>
+            </motion.div>
+          ))}
+        </div>
+      </motion.section>
+
+      <motion.section
+        variants={container}
+        initial="hidden"
+        whileInView="show"
+        viewport={{ once: true, margin: '-100px' }}
+        className="relative py-20"
+      >
+        <div className="pointer-events-none absolute inset-0 bg-dots [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,black,transparent)]" />
+        <div className="relative mx-auto max-w-7xl px-6 sm:px-8 lg:px-12">
+          <div className="mb-16 text-center">
+            <motion.span
+              variants={item}
+              className="text-sm font-semibold uppercase tracking-widest text-primary"
+            >
+              How It Works
+            </motion.span>
+            <motion.h2
+              variants={item}
+              className="mt-3 font-display text-3xl font-bold tracking-tight sm:text-4xl"
+            >
+              Simple setup, powerful monitoring
+            </motion.h2>
           </div>
-          
-          <div className="mt-12 pt-8 border-t border-gray-200 text-center text-sm text-gray-500">
-            © {new Date().getFullYear()} API Monitor. All rights reserved.
+
+          <div className="grid gap-8 md:grid-cols-3">
+            {steps.map((step) => (
+              <motion.div
+                key={step.num}
+                variants={item}
+                className="relative text-center"
+              >
+                <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-2xl border border-primary/30 bg-primary/10 font-display text-lg font-bold text-primary">
+                  {step.num}
+                </div>
+                <h3 className="mb-3 font-display text-xl font-semibold">
+                  {step.title}
+                </h3>
+                <p className="mx-auto max-w-xs text-sm text-muted-foreground">
+                  {step.desc}
+                </p>
+              </motion.div>
+            ))}
           </div>
         </div>
-      </footer>
-    </main>
+      </motion.section>
+
+      <motion.section
+        initial={{ opacity: 0, y: 24 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6 }}
+        className="mx-auto max-w-5xl px-6 py-20 sm:px-8 lg:px-12"
+      >
+        <div className="relative overflow-hidden rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/15 via-card to-card p-12 text-center glow-brand">
+          <div className="pointer-events-none absolute -top-24 left-1/2 h-64 w-96 -translate-x-1/2 rounded-full bg-primary/30 blur-[100px]" />
+          <div className="relative">
+            <ShieldCheck className="mx-auto mb-6 h-10 w-10 text-primary" />
+            <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
+              Ready to Monitor Your APIs?
+            </h2>
+            <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
+              Get started free and never miss an API issue again.
+            </p>
+            <div className="mt-8 flex justify-center">
+              <Button asChild size="xl">
+                <Link href="/signup">Get Started Free</Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </motion.section>
+    </div>
   );
 }

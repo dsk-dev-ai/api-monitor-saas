@@ -1,27 +1,38 @@
 import React from 'react';
 import { MonitorWizardFormData } from './monitor-wizard';
-import styles from './wizard-container.module.css';
 
 interface BasicConfigStepProps {
   formData: MonitorWizardFormData;
   onUpdate: (data: Partial<MonitorWizardFormData>) => void;
+  minInterval?: number;
 }
 
-export const BasicConfigStep: React.FC<BasicConfigStepProps> = ({ 
-  formData, 
-  onUpdate 
+const inputBase =
+  'flex h-11 w-full rounded-lg border border-input bg-background/60 px-3 py-2 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:border-primary/50';
+
+export const BasicConfigStep: React.FC<BasicConfigStepProps> = ({
+  formData,
+  onUpdate,
+  minInterval = 300,
 }) => {
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value, type } = e.target;
     onUpdate({
-      [name]: type === 'number' ? parseInt(value) : value
+      [name]: type === 'number' ? parseInt(value) : value,
     });
   };
 
   return (
-    <div className={styles.wizardStepContent}>
-      <div className={styles.formGroup}>
-        <label htmlFor="monitor-name">Monitor Name</label>
+    <div className="space-y-5">
+      <div className="space-y-2">
+        <label
+          htmlFor="monitor-name"
+          className="text-sm font-medium text-foreground"
+        >
+          Monitor Name
+        </label>
         <input
           type="text"
           id="monitor-name"
@@ -29,13 +40,18 @@ export const BasicConfigStep: React.FC<BasicConfigStepProps> = ({
           value={formData.name || ''}
           onChange={handleChange}
           required
-          className={styles.formInput}
+          className={inputBase}
           placeholder="Enter a name for your monitor"
         />
       </div>
-      
-      <div className={styles.formGroup}>
-        <label htmlFor="monitor-url">URL to Monitor</label>
+
+      <div className="space-y-2">
+        <label
+          htmlFor="monitor-url"
+          className="text-sm font-medium text-foreground"
+        >
+          URL to Monitor
+        </label>
         <input
           type="url"
           id="monitor-url"
@@ -43,19 +59,24 @@ export const BasicConfigStep: React.FC<BasicConfigStepProps> = ({
           value={formData.url || ''}
           onChange={handleChange}
           required
-          className={styles.formInput}
+          className={inputBase}
           placeholder="https://example.com/api/endpoint"
         />
       </div>
-      
-      <div className={styles.formGroup}>
-        <label htmlFor="monitor-method">HTTP Method</label>
+
+      <div className="space-y-2">
+        <label
+          htmlFor="monitor-method"
+          className="text-sm font-medium text-foreground"
+        >
+          HTTP Method
+        </label>
         <select
           id="monitor-method"
           name="method"
           value={formData.method || 'GET'}
           onChange={handleChange}
-          className={styles.formSelect}
+          className={`${inputBase} cursor-pointer`}
         >
           <option value="GET">GET</option>
           <option value="POST">POST</option>
@@ -65,20 +86,27 @@ export const BasicConfigStep: React.FC<BasicConfigStepProps> = ({
           <option value="HEAD">HEAD</option>
         </select>
       </div>
-      
-      <div className={styles.formGroup}>
-        <label htmlFor="monitor-interval">Check Interval (seconds)</label>
+
+      <div className="space-y-2">
+        <label
+          htmlFor="monitor-interval"
+          className="text-sm font-medium text-foreground"
+        >
+          Check Interval (seconds)
+        </label>
         <input
           type="number"
           id="monitor-interval"
           name="interval"
-          value={formData.interval || 60}
-          min="30"
+          value={formData.interval || minInterval}
+          min={minInterval}
           max="3600"
           onChange={handleChange}
-          className={styles.formInput}
+          className={inputBase}
         />
-        <p className={styles.formHelpText}>How often to check the endpoint (30–3600 seconds)</p>
+        <p className="text-xs text-muted-foreground">
+          Your plan requires at least {minInterval}s between checks (max 3600s)
+        </p>
       </div>
     </div>
   );

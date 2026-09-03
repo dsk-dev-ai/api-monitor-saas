@@ -12,6 +12,7 @@ import { StatusBadge } from '@/components/monitors/status-badge';
 import { UptimeChart } from '@/components/charts/uptime-chart';
 import { ResponseTimeChart } from '@/components/charts/response-time-chart';
 import { formatDate } from '@/lib/utils';
+import { Reveal, Stagger, MotionDiv } from '@/components/motion/motion-primitives';
 import { ArrowLeft, Activity, Clock, AlertTriangle, CheckCircle } from 'lucide-react';
 
 export default function MonitorDetailPage() {
@@ -54,33 +55,33 @@ export default function MonitorDetailPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <Link href="/monitors">
-          <Button variant="ghost" size="icon">
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-        </Link>
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold">{monitor.name}</h1>
-            <StatusBadge status={status} />
+      <MotionDiv>
+        <div className="flex items-center gap-4">
+          <Link href="/monitors">
+            <Button variant="ghost" size="icon">
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+          </Link>
+          <div>
+            <div className="flex items-center gap-3">
+              <h1 className="font-display text-3xl font-semibold tracking-tight">{monitor.name}</h1>
+              <StatusBadge status={status} />
+            </div>
+            <p className="mt-1 text-muted-foreground">{monitor.url}</p>
           </div>
-          <p className="text-muted-foreground">{monitor.url}</p>
         </div>
-      </div>
+      </MotionDiv>
 
-      {/* Stats */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <Stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center gap-3">
-              <div className="rounded-full bg-green-50 p-3">
-                <CheckCircle className="h-5 w-5 text-green-500" />
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400">
+                <CheckCircle className="h-5 w-5" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Uptime</p>
-                <p className="text-2xl font-bold">{monitor.stats?.uptime?.toFixed(2) || 0}%</p>
+                <p className="font-display text-2xl font-bold tracking-tight">{monitor.stats?.uptime?.toFixed(2) || 0}%</p>
               </div>
             </div>
           </CardContent>
@@ -88,12 +89,12 @@ export default function MonitorDetailPage() {
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center gap-3">
-              <div className="rounded-full bg-blue-50 p-3">
-                <Clock className="h-5 w-5 text-blue-500" />
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/15 text-primary">
+                <Clock className="h-5 w-5" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Avg Response</p>
-                <p className="text-2xl font-bold">{monitor.stats?.avgResponseTime || 0}ms</p>
+                <p className="font-display text-2xl font-bold tracking-tight">{monitor.stats?.avgResponseTime || 0}ms</p>
               </div>
             </div>
           </CardContent>
@@ -101,12 +102,12 @@ export default function MonitorDetailPage() {
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center gap-3">
-              <div className="rounded-full bg-purple-50 p-3">
-                <Activity className="h-5 w-5 text-purple-500" />
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/15 text-primary">
+                <Activity className="h-5 w-5" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Total Checks</p>
-                <p className="text-2xl font-bold">{monitor.stats?.totalChecks?.toLocaleString() || 0}</p>
+                <p className="font-display text-2xl font-bold tracking-tight">{monitor.stats?.totalChecks?.toLocaleString() || 0}</p>
               </div>
             </div>
           </CardContent>
@@ -114,126 +115,131 @@ export default function MonitorDetailPage() {
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center gap-3">
-              <div className="rounded-full bg-red-50 p-3">
-                <AlertTriangle className="h-5 w-5 text-red-500" />
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-destructive/15 text-destructive">
+                <AlertTriangle className="h-5 w-5" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Down Events</p>
-                <p className="text-2xl font-bold">{monitor.stats?.downChecks || 0}</p>
+                <p className="font-display text-2xl font-bold tracking-tight">{monitor.stats?.downChecks || 0}</p>
               </div>
             </div>
           </CardContent>
         </Card>
-      </div>
+      </Stagger>
 
-      {/* Charts */}
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Daily Uptime</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {monitor.dailyStats?.length > 0 ? (
-              <UptimeChart
-                data={monitor.dailyStats.map((d: any) => ({
-                  date: d.date,
-                  uptime: d.total > 0 ? (d.up_count / d.total) * 100 : 100,
-                  total: d.total,
-                  up_count: d.up_count,
-                }))}
-              />
-            ) : (
-              <div className="flex h-[300px] items-center justify-center text-muted-foreground">
-                No data available yet
-              </div>
-            )}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Response Time</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {monitor.dailyStats?.length > 0 ? (
-              <ResponseTimeChart
-                data={monitor.dailyStats.map((d: any) => ({
-                  date: d.date,
-                  avg_response_time: d.avg_response_time || 0,
-                  max_response_time: d.max_response_time || 0,
-                  min_response_time: d.min_response_time || 0,
-                }))}
-              />
-            ) : (
-              <div className="flex h-[300px] items-center justify-center text-muted-foreground">
-                No data available yet
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <Reveal>
+          <Card>
+            <CardHeader>
+              <CardTitle>Daily Uptime</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {monitor.dailyStats?.length > 0 ? (
+                <UptimeChart
+                  data={monitor.dailyStats.map((d: any) => ({
+                    date: d.date,
+                    uptime: d.total > 0 ? (d.up_count / d.total) * 100 : 100,
+                    total: d.total,
+                    up_count: d.up_count,
+                  }))}
+                />
+              ) : (
+                <div className="flex h-[300px] items-center justify-center text-muted-foreground">
+                  No data available yet
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </Reveal>
+        <Reveal>
+          <Card>
+            <CardHeader>
+              <CardTitle>Response Time</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {monitor.dailyStats?.length > 0 ? (
+                <ResponseTimeChart
+                  data={monitor.dailyStats.map((d: any) => ({
+                    date: d.date,
+                    avg_response_time: d.avg_response_time || 0,
+                    max_response_time: d.max_response_time || 0,
+                    min_response_time: d.min_response_time || 0,
+                  }))}
+                />
+              ) : (
+                <div className="flex h-[300px] items-center justify-center text-muted-foreground">
+                  No data available yet
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </Reveal>
       </div>
 
-      {/* Recent Checks */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Checks</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {monitor.checks?.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">No checks recorded yet</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b text-left">
-                    <th className="pb-3 font-medium">Status</th>
-                    <th className="pb-3 font-medium">Code</th>
-                    <th className="pb-3 font-medium">Response Time</th>
-                    <th className="pb-3 font-medium">Checked At</th>
-                    <th className="pb-3 font-medium">Error</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {monitor.checks.slice(0, 20).map((check: any) => (
-                    <tr key={check.id} className="border-b last:border-0">
-                      <td className="py-3">
-                        <StatusBadge status={check.status} />
-                      </td>
-                      <td className="py-3">{check.statusCode || '-'}</td>
-                      <td className="py-3">{check.responseTime}ms</td>
-                      <td className="py-3">{formatDate(check.checkedAt)}</td>
-                      <td className="py-3 text-red-500 max-w-xs truncate">{check.error || '-'}</td>
+      <Reveal>
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Checks</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {monitor.checks?.length === 0 ? (
+              <p className="py-8 text-center text-muted-foreground">No checks recorded yet</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border/60 text-left">
+                      <th className="pb-3 font-medium text-muted-foreground">Status</th>
+                      <th className="pb-3 font-medium text-muted-foreground">Code</th>
+                      <th className="pb-3 font-medium text-muted-foreground">Response Time</th>
+                      <th className="pb-3 font-medium text-muted-foreground">Checked At</th>
+                      <th className="pb-3 font-medium text-muted-foreground">Error</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                  </thead>
+                  <tbody className="divide-y divide-border/40">
+                    {monitor.checks.slice(0, 20).map((check: any) => (
+                      <tr key={check.id} className="transition-colors hover:bg-accent/30">
+                        <td className="py-3">
+                          <StatusBadge status={check.status} />
+                        </td>
+                        <td className="py-3">{check.statusCode || '-'}</td>
+                        <td className="py-3">{check.responseTime}ms</td>
+                        <td className="py-3">{formatDate(check.checkedAt)}</td>
+                        <td className="max-w-xs truncate py-3 text-destructive">{check.error || '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </Reveal>
 
-      {/* Alerts */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Alert History</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {monitor.alerts?.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">No alerts yet</p>
-          ) : (
-            <div className="space-y-3">
-              {monitor.alerts.map((alert: any) => (
-                <div key={alert.id} className="flex items-start gap-3 rounded-lg border p-3">
-                  <StatusBadge status={alert.status} />
-                  <div className="flex-1">
-                    <p className="font-medium">{alert.message}</p>
-                    <p className="text-xs text-muted-foreground">{formatDate(alert.sentAt)}</p>
+      <Reveal>
+        <Card>
+          <CardHeader>
+            <CardTitle>Alert History</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {monitor.alerts?.length === 0 ? (
+              <p className="py-8 text-center text-muted-foreground">No alerts yet</p>
+            ) : (
+              <div className="space-y-3">
+                {monitor.alerts.map((alert: any) => (
+                  <div key={alert.id} className="flex items-start gap-3 rounded-xl border border-border/60 bg-accent/30 p-3 transition-colors hover:bg-accent/50">
+                    <StatusBadge status={alert.status} />
+                    <div className="flex-1">
+                      <p className="font-medium">{alert.message}</p>
+                      <p className="text-xs text-muted-foreground">{formatDate(alert.sentAt)}</p>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </Reveal>
     </div>
   );
 }
@@ -241,15 +247,15 @@ export default function MonitorDetailPage() {
 function MonitorDetailSkeleton() {
   return (
     <div className="space-y-6">
-      <Skeleton className="h-10 w-64" />
+      <Skeleton className="h-10 w-64 rounded-lg" />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-28" />
+          <Skeleton key={i} className="h-28 rounded-2xl" />
         ))}
       </div>
       <div className="grid gap-6 lg:grid-cols-2">
-        <Skeleton className="h-[350px]" />
-        <Skeleton className="h-[350px]" />
+        <Skeleton className="h-[350px] rounded-2xl" />
+        <Skeleton className="h-[350px] rounded-2xl" />
       </div>
     </div>
   );

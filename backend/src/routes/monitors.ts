@@ -15,7 +15,7 @@ const createMonitorSchema = z.object({
   body: z.string().optional(),
   interval: z.number().int().min(30).max(3600).default(300),
   timeout: z.number().int().min(5).max(120).default(30),
-  expectedStatus: z.number().int().min(100).max(599).optional(),
+  expectedStatus: z.number().int().min(100).max(599).nullish(),
   expectedKeyword: z.string().optional(),
   region: z.string().default('global'),
 });
