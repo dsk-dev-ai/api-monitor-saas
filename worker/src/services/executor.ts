@@ -35,12 +35,22 @@ export async function executeCheck(
     const responseTime = Date.now() - startTime;
     const statusCode = response.status;
 
-    if (expectedStatus && statusCode !== expectedStatus) {
+    // Determine whether the response status is acceptable.
+    // - If an explicit expectedStatus is given, require an exact match.
+    // - Otherwise (blank), default to "any 2xx" as documented in the UI.
+    const statusOk = expectedStatus
+      ? statusCode === expectedStatus
+      : statusCode >= 200 && statusCode < 300;
+
+    if (!statusOk) {
+      const expectedLabel = expectedStatus
+        ? `Expected status ${expectedStatus}, got ${statusCode}`
+        : `Expected 2xx status, got ${statusCode}`;
       return {
         status: 'down',
         statusCode,
         responseTime,
-        error: `Expected status ${expectedStatus}, got ${statusCode}`,
+        error: expectedLabel,
       };
     }
 

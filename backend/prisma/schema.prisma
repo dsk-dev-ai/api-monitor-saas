@@ -35,7 +35,7 @@ model Monitor {
   body            String?
   interval        Int              @default(300)
   timeout         Int              @default(30)
-  expectedStatus  Int?             @default(200) @map("expected_status")
+  expectedStatus  Int?             @map("expected_status")
   expectedKeyword String?          @map("expected_keyword")
   isActive        Boolean          @default(true) @map("is_active")
   isPaused        Boolean          @default(false) @map("is_paused")

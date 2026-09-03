@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { CheckCircle, Loader2 } from 'lucide-react';
 import { api } from '@/lib/api-client';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 interface Plan {
   id: string;
@@ -87,46 +89,55 @@ export function PricingPlans() {
         {visible.map((plan) => (
           <div
             key={plan.name}
-            className={`border rounded-xl p-6 hover:shadow-lg transition-shadow
-              ${plan.popular ? 'border-primary ring-2 ring-primary/20' : 'border-gray-200'}`}
+            className={cn(
+              'rounded-2xl border p-6 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg',
+              plan.popular
+                ? 'border-primary/40 bg-gradient-to-b from-primary/10 to-card/70 glow-soft'
+                : 'border-border/60 bg-card/70'
+            )}
           >
-            <div className="flex items-start space-x-3 mb-4">
-              {plan.planned && (
-                <span className="bg-gray-200 text-gray-600 text-xs font-medium px-2.5 py-0.5 rounded">
-                  Planned
-                </span>
-              )}
+            <div className="mb-4 flex items-center gap-3">
+              {plan.planned && <Badge variant="warning">Planned</Badge>}
               {plan.popular && !plan.planned && (
-                <span className="bg-primary text-white text-xs font-medium px-2.5 py-0.5 rounded">
-                  Most Popular
-                </span>
+                <Badge>Most Popular</Badge>
               )}
-              <h2 className="text-2xl font-semibold text-gray-900">{plan.name}</h2>
+              <h2 className="font-display text-2xl font-bold tracking-tight text-foreground">
+                {plan.name}
+              </h2>
             </div>
 
             <div className="mb-6">
-              <p className="text-3xl font-bold text-gray-900">${plan.price}</p>
-              <p className="text-sm text-gray-500">{plan.planned ? 'planned / month' : '/month'}</p>
+              <p className="font-display text-4xl font-bold text-foreground">
+                <span className="align-top text-2xl text-muted-foreground">$</span>
+                {plan.price}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {plan.planned ? 'planned / month' : '/month'}
+              </p>
             </div>
 
-            <ul className="space-y-4 text-gray-600">
+            <ul className="space-y-3 text-muted-foreground">
               {plan.features.map((feature, index) => (
-                <li key={index} className="flex items-start space-x-2">
-                  <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                <li key={index} className="flex items-start gap-2">
+                  <CheckCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-emerald-500 dark:text-emerald-400" />
                   <span>{featureLabels[feature] || feature}</span>
                 </li>
               ))}
             </ul>
 
             {plan.planned ? (
-              <span className="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-200 text-sm font-medium rounded-md shadow-sm bg-gray-50 text-gray-400 cursor-not-allowed">
+              <span className="mt-6 inline-flex w-full cursor-not-allowed items-center justify-center rounded-lg border border-border bg-muted px-4 py-2.5 text-sm font-medium text-muted-foreground">
                 Coming soon
               </span>
             ) : (
               <a
                 href="/signup"
-                className={`w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm
-                  ${plan.popular ? 'bg-primary text-white hover:opacity-90' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
+                className={cn(
+                  'mt-6 inline-flex w-full items-center justify-center rounded-lg px-4 py-2.5 text-sm font-medium transition-all',
+                  plan.popular
+                    ? 'bg-gradient-brand text-white hover:opacity-90 hover:-translate-y-0.5'
+                    : 'border border-border text-foreground hover:bg-accent'
+                )}
               >
                 Get Started Free
               </a>
@@ -135,7 +146,7 @@ export function PricingPlans() {
         ))}
       </div>
 
-      <div className="text-center text-gray-500">
+      <div className="text-center text-sm text-muted-foreground">
         <p>Pricing plans are available on the free tier today; paid tiers are planned. All prices in USD.</p>
       </div>
     </div>

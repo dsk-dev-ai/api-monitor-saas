@@ -49,26 +49,36 @@ export default async function PublicStatusPage({ params }: { params: { slug: str
     ? 'Some Systems Experiencing Issues'
     : 'Partial Outage';
 
-  const statusColor = overallStatus === 'All Systems Operational' ? 'bg-green-500' : 'bg-amber-500';
+  const isOperational = overallStatus === 'All Systems Operational';
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="mx-auto max-w-4xl px-4 py-12">
+    <div className="relative min-h-screen overflow-hidden bg-background">
+      <div className="pointer-events-none absolute inset-0 bg-grid [mask-image:radial-gradient(ellipse_60%_60%_at_50%_0%,black,transparent)]" />
+      <div className="pointer-events-none absolute -top-40 left-1/2 h-[480px] w-[720px] -translate-x-1/2 rounded-full bg-primary/10 blur-[140px]" />
+
+      <div className="relative mx-auto max-w-4xl px-4 py-12">
         {/* Header */}
         <div className="text-center">
           {page.logo && (
             <Image src={page.logo} alt={page.name} className="mx-auto mb-4 h-16" width={200} height={60} />
           )}
-          <h1 className="text-4xl font-bold">{page.name}</h1>
+          <h1 className="font-display text-4xl font-bold tracking-tight">{page.name}</h1>
           {page.description && (
-            <p className="mt-2 text-lg text-gray-600">{page.description}</p>
+            <p className="mt-2 text-lg text-muted-foreground">{page.description}</p>
           )}
         </div>
 
         {/* Overall Status */}
-        <div className={`mt-8 rounded-lg ${statusColor} p-6 text-center text-white shadow-lg`}>
-          <h2 className="text-2xl font-semibold">{overallStatus}</h2>
-          <p className="mt-1 opacity-90">Last updated: {new Date().toLocaleString()}</p>
+        <div className={`mt-8 rounded-2xl p-6 text-center shadow-lg ${
+          isOperational
+            ? 'bg-emerald-500/15 border border-emerald-500/20'
+            : 'bg-amber-500/15 border border-amber-500/20'
+        }`}>
+          <div className="flex items-center justify-center gap-3">
+            <span className={`h-3 w-3 rounded-full ${isOperational ? 'bg-emerald-400 animate-pulse-dot' : 'bg-amber-400 animate-pulse'}`} />
+            <h2 className="font-display text-2xl font-semibold tracking-tight">{overallStatus}</h2>
+          </div>
+          <p className="mt-2 text-sm text-muted-foreground">Last updated: {new Date().toLocaleString()}</p>
         </div>
 
         {/* Monitors */}
@@ -81,25 +91,25 @@ export default async function PublicStatusPage({ params }: { params: { slug: str
             return (
               <div
                 key={monitor.name}
-                className="flex items-center justify-between rounded-lg border bg-white p-6 shadow-sm"
+                className="flex items-center justify-between rounded-2xl border border-border/60 bg-card/70 p-6 backdrop-blur-sm transition-all duration-300 hover:border-primary/25 hover:shadow-lg hover:shadow-primary/5"
               >
                 <div>
-                  <h3 className="text-lg font-semibold">{item.displayName || monitor.name}</h3>
-                  <p className="text-sm text-gray-500">{monitor.url}</p>
-                  <div className="mt-2 flex items-center gap-4 text-sm text-gray-500">
+                  <h3 className="font-display text-lg font-semibold tracking-tight">{item.displayName || monitor.name}</h3>
+                  <p className="text-sm text-muted-foreground">{monitor.url}</p>
+                  <div className="mt-2 flex items-center gap-4 text-sm text-muted-foreground">
                     <span>Uptime: {monitor.uptime.toFixed(2)}%</span>
                     <span>Response: {monitor.avgResponseTime}ms</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <span
-                    className={`inline-block h-4 w-4 rounded-full ${
-                      isUp ? 'bg-green-500' : status === 'degraded' ? 'bg-amber-500' : 'bg-red-500'
-                    } ${!isUp && 'animate-pulse'}`}
+                    className={`inline-block h-3 w-3 rounded-full ${
+                      isUp ? 'bg-emerald-400 animate-pulse-dot' : status === 'degraded' ? 'bg-amber-400 animate-pulse' : 'bg-red-400 animate-pulse'
+                    }`}
                   />
                   <span
                     className={`font-medium capitalize ${
-                      isUp ? 'text-green-600' : status === 'degraded' ? 'text-amber-600' : 'text-red-600'
+                      isUp ? 'text-emerald-400' : status === 'degraded' ? 'text-amber-400' : 'text-red-400'
                     }`}
                   >
                     {status}
@@ -111,7 +121,7 @@ export default async function PublicStatusPage({ params }: { params: { slug: str
         </div>
 
         {/* Footer */}
-        <div className="mt-12 text-center text-sm text-gray-400">
+        <div className="mt-12 text-center text-sm text-muted-foreground/60">
           <p>Powered by API Monitor SaaS</p>
         </div>
       </div>
