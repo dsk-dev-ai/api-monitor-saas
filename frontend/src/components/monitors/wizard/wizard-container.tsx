@@ -2,6 +2,8 @@ import { useState, useCallback } from 'react';
 import { Check, Loader2 } from 'lucide-react';
 import { WizardStep, WizardSteps, MonitorWizardFormData } from './monitor-wizard';
 import { cn } from '@/lib/utils';
+import { getMinInterval } from '@/lib/plan-limits';
+import { useAuthStore } from '@/stores/auth-store';
 
 interface WizardContainerProps {
   onComplete: (formData: MonitorWizardFormData) => Promise<{ success?: boolean; error?: string } | void>;
@@ -10,15 +12,25 @@ interface WizardContainerProps {
 
 export const WizardContainer: React.FC<WizardContainerProps> = (props: WizardContainerProps) => {
   const { onComplete, onCancel } = props;
+  const plan = useAuthStore((s) => s.user?.subscription?.plan);
+  const minInterval = getMinInterval(plan);
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<MonitorWizardFormData>({
     name: '',
     url: '',
     method: 'GET',
-    interval: 60,
+    interval: minInterval,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const validateInterval = useCallback((): boolean => {
+    if (!formData.interval || formData.interval < minInterval || formData.interval > 3600) {
+      setError(`Check interval must be between ${minInterval} and 3600 seconds for your plan`);
+      return false;
+    }
+    return true;
+  }, [formData.interval, minInterval]);
 
   const validateStep = useCallback((step: number): boolean => {
     switch (step) {
@@ -36,13 +48,16 @@ export const WizardContainer: React.FC<WizardContainerProps> = (props: WizardCon
   const goToNextStep = useCallback(() => {
     if (currentStep < WizardSteps.length) {
       if (validateStep(currentStep)) {
+        if (currentStep === 1 && !validateInterval()) {
+          return;
+        }
         setCurrentStep((prev) => prev + 1);
         setError(null);
       } else {
         setError('Please complete all required fields before proceeding');
       }
     }
-  }, [currentStep, validateStep]);
+  }, [currentStep, validateStep, validateInterval]);
 
   const goToPrevStep = useCallback(() => {
     if (currentStep > 1) {
@@ -75,6 +90,9 @@ export const WizardContainer: React.FC<WizardContainerProps> = (props: WizardCon
       setError('Please complete all required fields');
       return;
     }
+    if (!validateInterval()) {
+      return;
+    }
 
     setIsSubmitting(true);
     setError(null);
@@ -89,7 +107,7 @@ export const WizardContainer: React.FC<WizardContainerProps> = (props: WizardCon
     } finally {
       setIsSubmitting(false);
     }
-  }, [formData, onComplete, validateStep]);
+  }, [formData, onComplete, validateStep, validateInterval]);
 
   const handleCancel = useCallback(() => {
     onCancel();
@@ -156,7 +174,11 @@ export const WizardContainer: React.FC<WizardContainerProps> = (props: WizardCon
 
       <div className="min-h-[280px]">
         {currentWizardStep ? (
-          <currentWizardStep.component formData={formData} onUpdate={updateFormData} />
+          <currentWizardStep.component
+            formData={formData}
+            onUpdate={updateFormData}
+            minInterval={minInterval}
+          />
         ) : null}
       </div>
 

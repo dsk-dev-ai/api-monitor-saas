@@ -137,7 +137,7 @@ export const monitorService = {
       const plan = subscription?.plan || 'free';
       const limits = PLAN_LIMITS[plan];
 
-if ((data.interval ?? 300) < limits.minInterval) {
+      if (data.interval < limits.minInterval) {
         throw new AppError(
           `Minimum check interval for ${plan} plan is ${limits.minInterval} seconds`,
           400

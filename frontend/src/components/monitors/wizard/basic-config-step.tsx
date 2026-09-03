@@ -4,6 +4,7 @@ import { MonitorWizardFormData } from './monitor-wizard';
 interface BasicConfigStepProps {
   formData: MonitorWizardFormData;
   onUpdate: (data: Partial<MonitorWizardFormData>) => void;
+  minInterval?: number;
 }
 
 const inputBase =
@@ -12,6 +13,7 @@ const inputBase =
 export const BasicConfigStep: React.FC<BasicConfigStepProps> = ({
   formData,
   onUpdate,
+  minInterval = 300,
 }) => {
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -96,14 +98,14 @@ export const BasicConfigStep: React.FC<BasicConfigStepProps> = ({
           type="number"
           id="monitor-interval"
           name="interval"
-          value={formData.interval || 60}
-          min="30"
+          value={formData.interval || minInterval}
+          min={minInterval}
           max="3600"
           onChange={handleChange}
           className={inputBase}
         />
         <p className="text-xs text-muted-foreground">
-          How often to check the endpoint (30–3600 seconds)
+          Your plan requires at least {minInterval}s between checks (max 3600s)
         </p>
       </div>
     </div>
