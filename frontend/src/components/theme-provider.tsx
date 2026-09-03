@@ -26,17 +26,16 @@ function getInitialTheme(): Theme {
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>('light');
+  const [theme, setThemeState] = useState<Theme>(() => getInitialTheme());
 
   useEffect(() => {
-    setThemeState(getInitialTheme());
-  }, []);
-
-  useEffect(() => {
-    const root = document.documentElement;
-    root.classList.toggle('dark', theme === 'dark');
-    root.style.colorScheme = theme;
-    window.localStorage.setItem('theme', theme);
+    const applyTheme = (next: Theme) => {
+      const root = document.documentElement;
+      root.classList.toggle('dark', next === 'dark');
+      root.style.colorScheme = next;
+      window.localStorage.setItem('theme', next);
+    };
+    applyTheme(theme);
   }, [theme]);
 
   const setTheme = useCallback((next: Theme) => setThemeState(next), []);
