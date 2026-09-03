@@ -41,10 +41,17 @@ api.interceptors.response.use(
 
       try {
         const { data } = await api.post('/auth/refresh', { refresh_token: refreshToken });
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('access_token', data.access_token);
+        const newAccessToken = data?.session?.access_token;
+        if (!newAccessToken) {
+          throw new Error('No access token in refresh response');
         }
-        originalRequest.headers.Authorization = `Bearer ${data.access_token}`;
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('access_token', newAccessToken);
+          if (data.session.refresh_token) {
+            localStorage.setItem('refresh_token', data.session.refresh_token);
+          }
+        }
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         return api(originalRequest);
       } catch (refreshError) {
         if (typeof window !== 'undefined') {

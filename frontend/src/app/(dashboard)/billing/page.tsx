@@ -230,9 +230,9 @@ export default function BillingPage() {
                     </Button>
                   ) : plan.id === 'free' ? (
                     <Button variant="outline" disabled className="w-full">
-                      Downgrade via Stripe
+                      Current Plan
                     </Button>
-                  ) : (
+                  ) : checkoutEnabled ? (
                     <Button
                       className="w-full"
                       disabled={action === 'checkout'}
@@ -240,6 +240,10 @@ export default function BillingPage() {
                     >
                       {action === 'checkout' && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                       Upgrade
+                    </Button>
+                  ) : (
+                    <Button disabled className="w-full" title="Billing is not enabled on this deployment yet">
+                      Not available yet
                     </Button>
                   )}
                 </CardContent>

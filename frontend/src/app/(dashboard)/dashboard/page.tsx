@@ -89,7 +89,6 @@ bg: 'bg-red-50',
 return ( <div className="space-y-6"> <div> <h1 className="text-3xl font-bold">Dashboard</h1> <p className="text-muted-foreground">
 Overview of your monitoring infrastructure </p> </div>
 
-```
   <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
     {statCards.map((card) => (
       <Card key={card.title}>

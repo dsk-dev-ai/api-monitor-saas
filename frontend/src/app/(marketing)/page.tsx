@@ -27,7 +27,7 @@ export default function MarketingHomePage() {
         <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
           <div className="text-center">
             <h1 className="mb-6 text-4xl font-bold text-gray-900 sm:text-5xl">
-              Monitor Your APIs in Real-Time
+              Monitor Your APIs Around the Clock
             </h1>
             <p className="mb-8 max-w-2xl mx-auto text-lg text-gray-600">
               Get email alerts when your APIs go down or return unexpected responses. 
@@ -59,7 +59,7 @@ export default function MarketingHomePage() {
               Powerful Features for API Excellence
             </h2>
             <p className="max-w-2xl mx-auto text-gray-600">
-              Everything you need to monitor, analyze, and optimize your APIs
+              Everything you need to monitor and analyze your APIs
             </p>
           </div>
           
@@ -73,7 +73,7 @@ export default function MarketingHomePage() {
                 <Zap className="h-8 w-8 text-blue-600" />
               </div>
               <h3 className="mb-3 text-xl font-semibold text-gray-900">
-                Real-time Monitoring
+                HTTP Monitoring
               </h3>
               <p className="text-gray-600">
                 Regular HTTP health checks on your API endpoints, with email alerts when issues are detected.
@@ -232,7 +232,7 @@ export default function MarketingHomePage() {
                 Get Alerts & Insights
               </h3>
               <p className="text-gray-600">
-                Receive instant alerts and access detailed analytics when issues are detected.
+                Receive email alerts and access detailed analytics when issues are detected.
               </p>
             </motion.div>
           </div>
@@ -246,13 +246,13 @@ export default function MarketingHomePage() {
             Ready to Monitor Your APIs?
           </h2>
           <p className="mb-8 max-w-2xl mx-auto text-blue-50">
-            Start your free trial today and never miss an API issue again.
+            Get started free and never miss an API issue again.
           </p>
           <Link
             href="/signup"
             className="inline-block bg-white text-blue-600 hover:bg-blue-50 font-medium py-3 px-8 rounded-lg transition-colors duration-200"
           >
-            Start Free Trial
+            Get Started Free
           </Link>
         </div>
       </section>
@@ -266,7 +266,7 @@ export default function MarketingHomePage() {
                 API Monitor
               </h3>
               <p className="text-gray-600">
-                Real-time API monitoring and alerting platform built for developers and DevOps teams.
+                API & website uptime monitoring with email alerts, built for developers and DevOps teams.
               </p>
             </div>
             

@@ -155,9 +155,9 @@ database:
 // Root
 app.get('/', (_req, res) => {
 res.json({
-name: 'API Monitor SaaS',
-version: '1.0.0',
-status: 'running',
+    name: 'API Monitor SaaS',
+    version: '3.0.0',
+    status: 'running',
 endpoints: {
 auth: '/api/v1/auth',
 monitors:
