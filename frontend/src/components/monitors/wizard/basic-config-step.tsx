@@ -63,7 +63,6 @@ export const BasicConfigStep: React.FC<BasicConfigStepProps> = ({
           <option value="DELETE">DELETE</option>
           <option value="PATCH">PATCH</option>
           <option value="HEAD">HEAD</option>
-          <option value="OPTIONS">OPTIONS</option>
         </select>
       </div>
       
@@ -74,12 +73,12 @@ export const BasicConfigStep: React.FC<BasicConfigStepProps> = ({
           id="monitor-interval"
           name="interval"
           value={formData.interval || 60}
-          min="10"
-          max="86400"
+          min="30"
+          max="3600"
           onChange={handleChange}
           className="form-input"
         />
-        <p className="form-help-text">How often to check the endpoint (minimum 10 seconds)</p>
+        <p className="form-help-text">How often to check the endpoint (30–3600 seconds)</p>
       </div>
     </div>
   );

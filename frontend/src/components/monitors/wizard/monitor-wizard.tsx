@@ -23,26 +23,6 @@ export interface MonitorWizardFormData {
   expectedKeyword?: string;
   headers?: Record<string, string>;
   body?: string;
-  authType?: 'none' | 'basic' | 'bearer' | 'api-key';
-  authUsername?: string;
-  authPassword?: string;
-  authToken?: string;
-  authApiKey?: string;
-  authApiKeyHeader?: string;
-  
-  // Alert Settings
-  emailAlerts?: boolean;
-  webhookAlerts?: boolean;
-  webhookUrl?: string;
-  alertOnDown?: boolean;
-  alertOnUp?: boolean;
-  alertOnDegraded?: boolean;
-  
-  // Advanced Monitoring
-  followRedirects?: boolean;
-  ignoreSSL?: boolean;
-  retryAttempts?: number;
-  retryDelay?: number;
 }
 
 export const WizardSteps: WizardStep[] = [

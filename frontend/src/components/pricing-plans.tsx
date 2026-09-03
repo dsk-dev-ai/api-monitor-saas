@@ -12,6 +12,7 @@ interface Plan {
   priceLabel: string;
   features: string[];
   popular: boolean;
+  planned?: boolean;
 }
 
 const featureLabels: Record<string, string> = {
@@ -53,26 +54,28 @@ export function PricingPlans() {
       description: 'Perfect for personal projects',
       price: 0,
       priceLabel: 'Free forever',
-      features: ['uptime_monitoring', 'email_alerts', '5_min_checks', 'basic_analytics'],
-      popular: false,
+      features: ['uptime_monitoring', 'email_alerts', '5_min_checks', 'basic_analytics', 'status_pages'],
+      popular: true,
     },
     {
       id: 'basic',
       name: 'Basic',
       description: 'For small teams and startups',
       price: 9,
-      priceLabel: '$9/month',
-      features: ['uptime_monitoring', 'email_alerts', '1_min_checks', 'status_pages', 'response_time_tracking', 'advanced_analytics'],
-      popular: true,
+      priceLabel: '$9/month (planned)',
+      features: ['uptime_monitoring', 'email_alerts', '1_min_checks', 'response_time_tracking', 'advanced_analytics'],
+      popular: false,
+      planned: true,
     },
     {
       id: 'pro',
       name: 'Pro',
       description: 'For growing businesses',
       price: 29,
-      priceLabel: '$29/month',
-      features: ['all_features', 'webhook_alerts', 'slack_alerts', '30_sec_checks', 'advanced_analytics', 'api_access', 'custom_domains'],
+      priceLabel: '$29/month (planned)',
+      features: ['uptime_monitoring', 'email_alerts', '30_sec_checks', 'advanced_analytics', 'webhook_alerts', 'slack_alerts', 'custom_domains'],
       popular: false,
+      planned: true,
     },
   ];
 
@@ -88,7 +91,12 @@ export function PricingPlans() {
               ${plan.popular ? 'border-primary ring-2 ring-primary/20' : 'border-gray-200'}`}
           >
             <div className="flex items-start space-x-3 mb-4">
-              {plan.popular && (
+              {plan.planned && (
+                <span className="bg-gray-200 text-gray-600 text-xs font-medium px-2.5 py-0.5 rounded">
+                  Planned
+                </span>
+              )}
+              {plan.popular && !plan.planned && (
                 <span className="bg-primary text-white text-xs font-medium px-2.5 py-0.5 rounded">
                   Most Popular
                 </span>
@@ -98,7 +106,7 @@ export function PricingPlans() {
 
             <div className="mb-6">
               <p className="text-3xl font-bold text-gray-900">${plan.price}</p>
-              <p className="text-sm text-gray-500">/month</p>
+              <p className="text-sm text-gray-500">{plan.planned ? 'planned / month' : '/month'}</p>
             </div>
 
             <ul className="space-y-4 text-gray-600">
@@ -110,19 +118,25 @@ export function PricingPlans() {
               ))}
             </ul>
 
-            <a
-              href="/signup"
-              className={`w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm
-                ${plan.popular ? 'bg-primary text-white hover:opacity-90' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
-            >
-              {plan.id === 'free' ? 'Get Started Free' : 'Start Free, Upgrade Later'}
-            </a>
+            {plan.planned ? (
+              <span className="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-200 text-sm font-medium rounded-md shadow-sm bg-gray-50 text-gray-400 cursor-not-allowed">
+                Coming soon
+              </span>
+            ) : (
+              <a
+                href="/signup"
+                className={`w-full inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm
+                  ${plan.popular ? 'bg-primary text-white hover:opacity-90' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
+              >
+                Get Started Free
+              </a>
+            )}
           </div>
         ))}
       </div>
 
       <div className="text-center text-gray-500">
-        <p>All prices are in USD. Free plan included with every account.</p>
+        <p>Pricing plans are available on the free tier today; paid tiers are planned. All prices in USD.</p>
       </div>
     </div>
   );

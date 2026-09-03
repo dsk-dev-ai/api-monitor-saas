@@ -90,7 +90,7 @@ export function Sidebar() {
         {/* Footer */}
         <div className="border-t p-3">
           <div className={cn('text-xs text-muted-foreground', collapsed && 'text-center')}>
-            {!collapsed && 'v2.0.0-enterprise'}
+            {!collapsed && 'Open source'}
           </div>
         </div>
       </div>

@@ -11,7 +11,7 @@ export default function WorkspacesPage() {
 
       <div className="mt-6 rounded-lg border p-6">
         <h2 className="text-xl font-semibold">
-          Coming in v2.1
+          Coming soon
         </h2>
 
         <ul className="mt-4 list-disc pl-6 space-y-2">

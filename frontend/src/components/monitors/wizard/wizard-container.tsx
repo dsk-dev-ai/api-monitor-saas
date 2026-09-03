@@ -145,7 +145,7 @@ export const WizardContainer: React.FC<WizardContainerProps> = (props: WizardCon
         <button 
           onClick={handleCancel} 
           className={`${styles.wizardBtn} ${styles.wizardBtnSecondary}`}
-          disabled={isSubmitting || currentStep === 1}
+          disabled={isSubmitting}
         >
           {currentStep === 1 ? 'Cancel' : 'Back'}
         </button>

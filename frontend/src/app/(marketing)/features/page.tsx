@@ -246,7 +246,7 @@ export default function FeaturesPage() {
               View Pricing
             </Link>
             <Link href="/signup" className="flex-1 px-8 py-4 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors font-medium">
-              Start Free Trial
+              Get Started Free
             </Link>
           </div>
         </div>
