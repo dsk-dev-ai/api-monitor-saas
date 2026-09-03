@@ -19,8 +19,8 @@ export const BasicConfigStep: React.FC<BasicConfigStepProps> = ({
   };
 
   return (
-    <div className="wizard-step-content">
-      <div className="form-group">
+    <div className={styles.wizardStepContent}>
+      <div className={styles.formGroup}>
         <label htmlFor="monitor-name">Monitor Name</label>
         <input
           type="text"
@@ -29,12 +29,12 @@ export const BasicConfigStep: React.FC<BasicConfigStepProps> = ({
           value={formData.name || ''}
           onChange={handleChange}
           required
-          className="form-input"
+          className={styles.formInput}
           placeholder="Enter a name for your monitor"
         />
       </div>
       
-      <div className="form-group">
+      <div className={styles.formGroup}>
         <label htmlFor="monitor-url">URL to Monitor</label>
         <input
           type="url"
@@ -43,19 +43,19 @@ export const BasicConfigStep: React.FC<BasicConfigStepProps> = ({
           value={formData.url || ''}
           onChange={handleChange}
           required
-          className="form-input"
+          className={styles.formInput}
           placeholder="https://example.com/api/endpoint"
         />
       </div>
       
-      <div className="form-group">
+      <div className={styles.formGroup}>
         <label htmlFor="monitor-method">HTTP Method</label>
         <select
           id="monitor-method"
           name="method"
           value={formData.method || 'GET'}
           onChange={handleChange}
-          className="form-select"
+          className={styles.formSelect}
         >
           <option value="GET">GET</option>
           <option value="POST">POST</option>
@@ -66,7 +66,7 @@ export const BasicConfigStep: React.FC<BasicConfigStepProps> = ({
         </select>
       </div>
       
-      <div className="form-group">
+      <div className={styles.formGroup}>
         <label htmlFor="monitor-interval">Check Interval (seconds)</label>
         <input
           type="number"
@@ -76,9 +76,9 @@ export const BasicConfigStep: React.FC<BasicConfigStepProps> = ({
           min="30"
           max="3600"
           onChange={handleChange}
-          className="form-input"
+          className={styles.formInput}
         />
-        <p className="form-help-text">How often to check the endpoint (30–3600 seconds)</p>
+        <p className={styles.formHelpText}>How often to check the endpoint (30–3600 seconds)</p>
       </div>
     </div>
   );
