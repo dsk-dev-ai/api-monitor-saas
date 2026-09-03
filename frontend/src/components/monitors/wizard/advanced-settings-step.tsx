@@ -1,5 +1,6 @@
 import React from 'react';
 import { MonitorWizardFormData } from './monitor-wizard';
+import styles from './wizard-container.module.css';
 
 interface AdvancedSettingsStepProps {
   formData: MonitorWizardFormData;
@@ -18,12 +19,12 @@ export const AdvancedSettingsStep: React.FC<AdvancedSettingsStepProps> = ({
   };
 
   return (
-    <div className="wizard-step-content">
+    <div className={styles.wizardStepContent}>
       {/* Request Settings */}
-      <div className="advanced-section">
+      <div className={styles.advancedSection}>
         <h3>Request Settings</h3>
         
-        <div className="form-group">
+        <div className={styles.formGroup}>
           <label htmlFor="timeout">Timeout (seconds)</label>
           <input
             type="number"
@@ -33,12 +34,12 @@ export const AdvancedSettingsStep: React.FC<AdvancedSettingsStepProps> = ({
             min="5"
             max="120"
             onChange={handleChange}
-            className="form-input"
+            className={styles.formInput}
           />
-          <p className="form-help-text">Request timeout in seconds (5–120, default: 30)</p>
+          <p className={styles.formHelpText}>Request timeout in seconds (5–120, default: 30)</p>
         </div>
         
-        <div className="form-group">
+        <div className={styles.formGroup}>
           <label htmlFor="expected-status">Expected Status Code</label>
           <input
             type="number"
@@ -48,12 +49,12 @@ export const AdvancedSettingsStep: React.FC<AdvancedSettingsStepProps> = ({
             min="100"
             max="599"
             onChange={handleChange}
-            className="form-input"
+            className={styles.formInput}
           />
-          <p className="form-help-text">Expected HTTP status code (leave blank for any 2xx)</p>
+          <p className={styles.formHelpText}>Expected HTTP status code (leave blank for any 2xx)</p>
         </div>
         
-        <div className="form-group">
+        <div className={styles.formGroup}>
           <label htmlFor="expected-keyword">Expected Keyword</label>
           <input
             type="text"
@@ -61,31 +62,31 @@ export const AdvancedSettingsStep: React.FC<AdvancedSettingsStepProps> = ({
             name="expectedKeyword"
             value={formData.expectedKeyword || ''}
             onChange={handleChange}
-            className="form-input"
+            className={styles.formInput}
           />
-          <p className="form-help-text">Keyword that should be present in response body</p>
+          <p className={styles.formHelpText}>Keyword that should be present in response body</p>
         </div>
       </div>
       
       {/* Request Body & Headers */}
-      <div className="advanced-section">
+      <div className={styles.advancedSection}>
         <h3>Request Body & Headers</h3>
         
-        <div className="form-group">
+        <div className={styles.formGroup}>
           <label htmlFor="request-body">Request Body</label>
           <textarea
             id="request-body"
             name="body"
             value={formData.body || ''}
             onChange={handleChange}
-            className="form-textarea"
+            className={styles.formTextarea}
             rows={4}
             placeholder="JSON, XML, or form data for POST/PUT/PATCH requests"
           />
-          <p className="form-help-text">Request body content (for POST, PUT, PATCH requests)</p>
+          <p className={styles.formHelpText}>Request body content (for POST, PUT, PATCH requests)</p>
         </div>
         
-        <div className="form-group">
+        <div className={styles.formGroup}>
           <label htmlFor="custom-headers">Custom Headers (JSON)</label>
           <textarea
             id="custom-headers"
@@ -99,11 +100,11 @@ export const AdvancedSettingsStep: React.FC<AdvancedSettingsStepProps> = ({
                 // Invalid JSON, don't update
               }
             }}
-            className="form-textarea"
+            className={styles.formTextarea}
             rows={3}
             placeholder='{"Content-Type": "application/json", "Authorization": "Bearer token"}'
           />
-          <p className="form-help-text">Custom headers in JSON format</p>
+          <p className={styles.formHelpText}>Custom headers in JSON format</p>
         </div>
       </div>
     </div>
