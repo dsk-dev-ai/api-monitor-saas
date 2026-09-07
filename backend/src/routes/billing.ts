@@ -5,6 +5,7 @@ import { prisma } from '../config/database';
 import { authMiddleware } from '../middleware/auth';
 import { asyncHandler, AppError } from '../middleware/error';
 import { PLAN_LIMITS } from '../types';
+import { logger } from '../utils/logger';
 
 const router = Router();
 
@@ -210,11 +211,22 @@ router.post('/webhook', express.raw({ type: 'application/json' }), asyncHandler(
         const plan = session.metadata?.plan;
 
         if (userId && session.subscription) {
+          // `line_items` is not expanded on checkout.session.completed, so the
+          // price id must come from the subscription itself.
+          let subPriceId: string | undefined;
+          try {
+            const sub = await stripe.subscriptions.retrieve(session.subscription as string);
+            subPriceId = sub.items.data[0]?.price?.id;
+          } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : 'failed to fetch subscription';
+            logger.warn(`Could not fetch subscription for user ${userId}: ${message}`);
+          }
+
           await prisma.subscription.update({
             where: { userId },
             data: {
               stripeSubscriptionId: session.subscription as string,
-              stripePriceId: session.line_items?.data[0]?.price?.id,
+              stripePriceId: subPriceId,
               plan: plan || 'basic',
               status: 'active',
               currentPeriodStart: new Date(),

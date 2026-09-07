@@ -103,15 +103,20 @@ async function runChecks() {
               logger.info(`Status change for ${monitor.name}: ${previousStatus} -> ${currentStatus}`);
 
               // Create alert record
+              const isResolved = currentStatus === 'up';
+              const alertMessage = isResolved
+                ? `${monitor.name} is back UP`
+                : currentStatus === 'down'
+                  ? `${monitor.name} is DOWN: ${result.error || 'No response'}`
+                  : `${monitor.name} is DEGRADED: ${result.error || 'Slow or partial response'}`;
+
               await prisma.alert.create({
                 data: {
                   monitorId: monitor.id,
                   userId: monitor.userId,
                   type: 'email',
-                  status: currentStatus === 'down' ? 'triggered' : 'resolved',
-                  message: currentStatus === 'down'
-                    ? `${monitor.name} is DOWN: ${result.error || 'No response'}`
-                    : `${monitor.name} is back UP`,
+                  status: isResolved ? 'resolved' : 'triggered',
+                  message: alertMessage,
                   details: {
                     statusCode: result.statusCode,
                     responseTime: result.responseTime,
@@ -126,7 +131,7 @@ async function runChecks() {
                   monitor.user.email,
                   monitor.name,
                   monitor.url,
-                  currentStatus === 'down' ? 'down' : 'up',
+                  currentStatus,
                   result.error,
                   result.responseTime,
                   result.statusCode
@@ -134,7 +139,7 @@ async function runChecks() {
               }
 
               // If resolved, update previous triggered alerts
-              if (currentStatus === 'up') {
+              if (isResolved) {
                 await prisma.alert.updateMany({
                   where: {
                     monitorId: monitor.id,

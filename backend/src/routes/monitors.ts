@@ -33,65 +33,86 @@ router.get('/', authMiddleware, asyncHandler(async (req, res) => {
         orderBy: { checkedAt: 'desc' },
         take: 1,
       },
-      _count: {
-        select: { checks: true },
-      },
     },
     orderBy: { createdAt: 'desc' },
   });
 
-  const monitorsWithStats = await Promise.all(
-    monitors.map(async (monitor) => {
-      const totalChecks = await prisma.check.count({
-        where: { monitorId: monitor.id },
-      });
+  const monitorIds = monitors.map((monitor) => monitor.id);
+  const last24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-      const upChecks = await prisma.check.count({
-        where: {
-          monitorId: monitor.id,
-          status: 'up',
-        },
-      });
+  // Bulk queries instead of N+1: one groupBy per window, one history read,
+  // one alert read.
+  const [allTimeCounts, last24hCounts, history, latestAlerts] = await Promise.all([
+    prisma.check.groupBy({
+      by: ['monitorId', 'status'],
+      where: { monitorId: { in: monitorIds } },
+      _count: { _all: true },
+    }),
+    prisma.check.groupBy({
+      by: ['monitorId', 'status'],
+      where: { monitorId: { in: monitorIds }, checkedAt: { gte: last24h } },
+      _count: { _all: true },
+    }),
+    prisma.check.findMany({
+      where: { monitorId: { in: monitorIds }, checkedAt: { gte: last24h } },
+      orderBy: { checkedAt: 'asc' },
+      select: {
+        monitorId: true,
+        status: true,
+        responseTime: true,
+        checkedAt: true,
+        statusCode: true,
+      },
+    }),
+    prisma.alert.findMany({
+      where: { monitorId: { in: monitorIds }, status: 'triggered' },
+      orderBy: { sentAt: 'desc' },
+      select: { monitorId: true, sentAt: true, message: true },
+    }),
+  ]);
 
-      const uptime24h = totalChecks > 0 ? (upChecks / totalChecks) * 100 : 100;
+  const countByMonitor = (rows: { monitorId: string; status: string; _count: { _all: number } }[]) => {
+    const map: Record<string, Record<string, number>> = {};
+    for (const row of rows) {
+      const bucket = (map[row.monitorId] ??= {});
+      bucket[row.status] = (bucket[row.status] ?? 0) + row._count._all;
+    }
+    return map;
+  };
 
-      // Get last 24h history for sparkline
-      const last24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
-      const history = await prisma.check.findMany({
-        where: {
-          monitorId: monitor.id,
-          checkedAt: { gte: last24h },
-        },
-        orderBy: { checkedAt: 'asc' },
-        select: {
-          status: true,
-          responseTime: true,
-          checkedAt: true,
-          statusCode: true,
-        },
-      });
+  const allTime = countByMonitor(allTimeCounts);
+  const last24hMap = countByMonitor(last24hCounts);
 
-      // Get latest down alert if any
-      const latestAlert = await prisma.alert.findFirst({
-        where: {
-          monitorId: monitor.id,
-          status: 'triggered',
-        },
-        orderBy: { sentAt: 'desc' },
-        select: { sentAt: true, message: true },
-      });
+  const historyByMonitor: Record<string, typeof history> = {};
+  for (const check of history) {
+    (historyByMonitor[check.monitorId] ??= []).push(check);
+  }
 
-      return {
-        ...monitor,
-        uptime24h: Math.round(uptime24h * 100) / 100,
-        lastCheck: monitor.checks[0] || null,
-        totalChecks,
-        upChecks,
-        history,
-        latestAlert,
-      };
-    })
-  );
+  const latestAlertByMonitor: Record<string, (typeof latestAlerts)[number]> = {};
+  for (const alert of latestAlerts) {
+    latestAlertByMonitor[alert.monitorId] ??= alert;
+  }
+
+  const monitorsWithStats = monitors.map((monitor) => {
+    const totalChecks = Object.values(allTime[monitor.id] ?? {}).reduce((sum, count) => sum + count, 0);
+    const upChecks = allTime[monitor.id]?.['up'] ?? 0;
+
+    // Uptime over the actual last 24h window (not all-time)
+    const h24 = last24hMap[monitor.id] ?? {};
+    const h24Total = Object.values(h24).reduce((sum, count) => sum + count, 0);
+    const h24Up = h24['up'] ?? 0;
+    const uptime24h = h24Total > 0 ? (h24Up / h24Total) * 100 : 100;
+
+    return {
+      ...monitor,
+      uptime24h: Math.round(uptime24h * 100) / 100,
+      lastCheck: monitor.checks[0] || null,
+      totalChecks,
+      upChecks,
+      history: historyByMonitor[monitor.id] ?? [],
+      latestAlert: latestAlertByMonitor[monitor.id] ?? null,
+    };
+  });
 
   res.json({
     monitors: monitorsWithStats,

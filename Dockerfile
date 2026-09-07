@@ -23,9 +23,8 @@ COPY worker/package*.json ./worker/
 COPY frontend/package*.json ./frontend/
 RUN npm ci --prefer-offline --no-audit --no-fund --workspaces=false && npm ci --prefer-offline --no-audit --no-fund
 
-# Prisma schemas + generation (backend and worker share the same DB schema)
+# Prisma schema + generation (worker reuses the backend schema)
 COPY backend/prisma ./backend/prisma
-COPY worker/prisma ./worker/prisma
 RUN npm run db:generate -w backend && npm run db:generate -w worker
 
 # Source + builds

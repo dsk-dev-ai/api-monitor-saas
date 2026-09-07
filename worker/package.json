@@ -7,7 +7,7 @@
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "db:generate": "prisma generate",
+    "db:generate": "prisma generate --schema ../backend/prisma/schema.prisma",
     "lint": "eslint src/**/*.ts",
     "typecheck": "tsc --noEmit"
   },
