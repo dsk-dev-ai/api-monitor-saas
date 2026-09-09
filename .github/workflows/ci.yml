@@ -162,7 +162,8 @@ jobs:
       - name: Build Worker Image
         uses: docker/build-push-action@v6
         with:
-          context: ./worker
+          context: .
+          dockerfile: worker/Dockerfile
           push: false
           tags: api-monitor-worker:test
 
