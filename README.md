@@ -6,6 +6,7 @@
 
 **Open-source API & website uptime monitoring, self-hostable**
 
+[![Try it live](https://img.shields.io/badge/Try_it_live-api--monitor--saas--frontend.vercel.app-34d399?style=for-the-badge&logo=vercel&logoColor=white)](https://api-monitor-saas-frontend.vercel.app)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%3E%3D22-brightgreen)](https://nodejs.org)
 [![Next.js](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org)
