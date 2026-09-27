@@ -1,4 +1,16 @@
 services:
+  migrate:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=${DATABASE_URL}
+    # Applies Prisma migrations once, then exits. Both application services wait
+    # for it to succeed, so a new deployment never starts against a stale schema.
+    command: npx prisma migrate deploy --schema prisma/schema.prisma
+    restart: "no"
+
   nginx:
     image: nginx:alpine
     ports:
@@ -30,7 +42,10 @@ services:
       - RESEND_API_KEY=${RESEND_API_KEY}
       - FROM_EMAIL=${FROM_EMAIL}
     depends_on:
-      - redis
+      redis:
+        condition: service_started
+      migrate:
+        condition: service_completed_successfully
     restart: unless-stopped
     deploy:
       replicas: 2
@@ -47,9 +62,15 @@ services:
       - RESEND_API_KEY=${RESEND_API_KEY}
       - FROM_EMAIL=${FROM_EMAIL}
     depends_on:
-      - redis
+      redis:
+        condition: service_started
+      migrate:
+        condition: service_completed_successfully
     restart: unless-stopped
     deploy:
+      # Exactly one. Last-check timestamps live in the worker's process memory,
+      # so a second replica issues duplicate probes and duplicate alerts. Scaling
+      # the worker requires the Redis-backed queue in ROADMAP.md (P1).
       replicas: 1
 
   frontend:

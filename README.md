@@ -132,7 +132,31 @@ npm run dev
 
 The **worker** is the engine: it loads active monitors on an interval, runs HTTP probes (`worker/src/services/executor.ts`), stores each result as a `Check`, detects status changes, and writes `Alert` records (emailing via Resend when configured).
 
-See [ARCHITECTURE.md](ARCHITECTURE.md) for how the system actually works, [ROADMAP.md](ROADMAP.md) for what is planned, and [docs/](docs/) for the commercial boundary, auth design, and third-party license inventory.
+## Documentation
+
+| Document | Covers |
+|---|---|
+| [ARCHITECTURE.md](ARCHITECTURE.md) | How the system actually works, component by component |
+| [ROADMAP.md](ROADMAP.md) | What is planned, ordered by priority, with known gaps |
+| [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Running it locally, on a host, and on managed platforms |
+| [ENV_GUIDE.txt](ENV_GUIDE.txt) | Where to obtain each environment variable |
+| [docs/THIRD_PARTY_LICENSES.md](docs/THIRD_PARTY_LICENSES.md) | Every dependency and its license |
+| [SECURITY.md](SECURITY.md) | Reporting a vulnerability, and known limitations |
+| [docs/](docs/) | Index, commercial boundary, and auth design |
+
+### Known limitations
+
+Two are worth knowing before you deploy this. Both are tracked in
+[ROADMAP.md](ROADMAP.md).
+
+- **SSRF in the monitoring worker (P0, unfixed).** Monitor URLs are user-supplied
+  and fetched with no destination validation, so a monitor can be pointed at
+  private network ranges or a cloud metadata endpoint. Do not expose the API to
+  untrusted users until this is fixed. Details in [SECURITY.md](SECURITY.md).
+- **The worker cannot run more than one replica.** Scheduling state lives in
+  process memory, so a second worker issues duplicate probes and duplicate alerts.
+  The Redis-backed queue that fixes this is not implemented yet.
+
 
 ## API
 
@@ -150,21 +174,33 @@ Backend routes are mounted under `/api/v1`. Highlights:
 ## Testing
 
 ```bash
+docker compose up -d
+curl -s localhost:3001/health     # expect "status":"healthy"
+
 npm run build
 npm run lint
 npm run typecheck
 npm test
+node scripts/audit-licenses.js    # regenerate the license inventory
 ```
 
-Backend unit/integration-route tests cover monitors, checks, and alerts (12 tests).
+Coverage is currently thin: two backend test files, 12 tests, covering monitor
+routes and the error middleware. The worker and frontend have no automated tests,
+and CI runs with `--passWithNoTests`, so an empty suite would still pass. Treat
+this as a known gap rather than a sign of health.
 
 ## Roadmap
 
 - [x] v1.0 — MVP: monitoring, alerts, billing
 - [x] v2.0 — Auth, dashboard, monitor management, analytics, alert system, worker service
 - [x] v3.0 — Professionalization: accurate claims/docs, community files, web fixes
-- [ ] Team workspaces, status-page management UI, Stripe billing wiring in the dashboard
-- [ ] Multi-region checks, more notification channels
+- [ ] P0 — SSRF protection, real test coverage
+- [ ] P1 — Redis job queue: retries, backoff, dead-letter, safe horizontal scaling
+- [ ] P2 — Self-hosted authentication, removing the Supabase dependency
+- [ ] P3 — Workspaces, RBAC, audit log
+- [ ] P4–P6 — Notification channels, incident management, billing entitlements
+
+Full prioritized list in [ROADMAP.md](ROADMAP.md).
 
 ## Community
 

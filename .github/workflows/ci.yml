@@ -77,6 +77,25 @@ jobs:
       - name: Run Tests
         run: npm test -w backend -- --passWithNoTests
 
+  licenses:
+    name: Dependency License Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Fails the build if docs/THIRD_PARTY_LICENSES.md is stale, or if any
+      # dependency introduces a copyleft or unrecognized license. The project is
+      # MIT and depends on staying commercially redistributable, so this is
+      # enforced mechanically rather than by review.
+      - name: Verify license inventory is current
+        run: node scripts/audit-licenses.js --check
+
   frontend:
     name: Frontend Build, Lint & Typecheck
     runs-on: ubuntu-latest
@@ -175,6 +194,7 @@ jobs:
       - frontend
       - worker
       - docker
+      - licenses
     steps:
       - name: Success
         run: echo "All CI checks passed successfully."

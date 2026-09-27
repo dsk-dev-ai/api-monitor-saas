@@ -3,6 +3,88 @@
 All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/) and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## Unreleased
+
+The Docker development environment had never worked. Six independent defects
+kept `docker compose up` from reaching a usable state — CI passed because it only
+builds images and never runs the stack. All are fixed and verified end to end.
+
+### Security
+- **The real `.env` was baked into the backend image.** No `.dockerignore` existed,
+  so `COPY . .` copied host files into the image, including the database password,
+  Supabase service-role key, and Stripe and Resend secrets. Anyone pulling that
+  image could read them. Added `.dockerignore` at the repository root and in
+  `backend/` and `frontend/`, and removed the `.gitignore` rule that listed
+  `.dockerignore` as a build artifact — that mistake is why the gap went unnoticed.
+- Dockerfiles no longer pin `registry.npmmirror.com`, which broke builds outside
+  that network. The registry is now a `NPM_REGISTRY` build argument defaulting to
+  the public npm registry.
+- Documented the unfixed SSRF exposure in the monitoring worker in
+  [SECURITY.md](SECURITY.md). User-supplied monitor URLs are fetched with no
+  destination validation, so a monitor can be pointed at private ranges or cloud
+  metadata endpoints.
+
+### Fixed
+- Prisma client was pinned to the `linux-musl` engine in `schema.prisma`, so every
+  Debian-based image loaded an engine linking against `libssl.so.1.1` that those
+  images do not provide. Now `binaryTargets = ["native"]`.
+- `node:22-slim` ships neither the `openssl` binary Prisma's platform detection
+  reads nor the `libssl` the query engine links against. Installed in all backend
+  and worker stages. This is why the Render deployment worked while local Docker
+  did not — that image already installed it.
+- Compose ran `npx ts-node-dev` against production images built with `--omit=dev`,
+  so `npx` fetched a ts-node incompatible with the TypeScript it resolved, and the
+  process crashed on startup. Added explicit `development` targets to the backend,
+  worker, and frontend Dockerfiles, keeping production the default build target.
+- The frontend bind mount shadowed the image's `node_modules`, failing with
+  `next: not found`. Added the missing anonymous volume.
+- `DATABASE_URL` points at `localhost:5434` for host tooling and is unreachable
+  from inside the compose network. Added `DATABASE_URL_DOCKER` for the containers.
+
+### Added
+- A one-shot `migrate` service applies the Prisma schema before the API and worker
+  start, so a fresh clone no longer needs a manual `db:migrate` step. Wired into
+  both `docker-compose.yml` and `docker-compose.prod.yml`.
+- Explicit `development` build targets for backend, worker, and frontend.
+- `scripts/audit-licenses.js` and `docs/THIRD_PARTY_LICENSES.md`. All 72 direct
+  dependencies are permissive, with no copyleft. The script reads the lockfiles
+  rather than `node_modules` so it is reproducible on a clean checkout, and exits
+  non-zero on a non-permissive license.
+- CI job enforcing that the license inventory is current and contains no copyleft.
+- `docs/DEPLOYMENT.md` covering local, single-host, and managed-platform
+  deployment, with troubleshooting and a table of known production limitations.
+- `docs/COMMERCIAL_BOUNDARY.md` defining what stays MIT and what is proprietary.
+- `docs/AUTH_DESIGN.md` specifying self-hosted authentication to replace Supabase.
+- `docs/README.md` as a documentation index.
+
+### Changed
+- **LICENSE** was truncated to 7 lines, cut off before the warranty disclaimer, so
+  GitHub classified the project as "Other" rather than MIT. Restored the full text.
+- **ARCHITECTURE.md** documented a mobile app, CLI tool, webhook service, Cloudflare
+  CDN, Docker Swarm, Prometheus, Grafana, Loki, Kafka, and row-level security, none
+  of which exist. Rewritten to describe only shipped behavior, and to state plainly
+  that row-level security is not enabled, that `bullmq` and `ioredis` are declared
+  but never imported, and that the worker cannot scale past one replica.
+- **ROADMAP.md** now holds everything previously documented as existing but not
+  implemented, ordered by priority, with the SSRF exposure at P0.
+- `DEVELOPMENT_PLAN.md`, `P1-VALIDATION.md`, and `UBUNTU_SETUP_GUIDE.md` moved to
+  `docs/history/`. They are development records, not product documentation, and a
+  buyer pays for shipped code rather than a plan.
+- `.env.example` and `ENV_GUIDE.txt` rewritten. Both previously implied that
+  `ENABLE_WORKSPACES` and `ENABLE_TEAMS` gate working features; neither flag is read
+  anywhere in the code.
+- `CONTRIBUTING.md` targets `main` rather than `develop`, and documents the license
+  policy and the implemented-versus-planned documentation rule.
+- `SECURITY.md` discloses the known SSRF exposure, the single-owner tenancy model,
+  and the service-role key requirement.
+- `docker-compose.prod.yml` pins the worker to one replica, since per-process
+  scheduling state makes additional replicas produce duplicate checks and alerts.
+
+### Verified
+Clean build of all images, five services healthy, `/health` reporting a connected
+database, frontend serving HTTP 200, auth guard and public routes behaving
+correctly, and 12/12 tests passing against a live database.
+
 ## v3.5.0 - 2026-09-03
 
 ### Added

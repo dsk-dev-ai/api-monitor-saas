@@ -360,25 +360,70 @@ first item in `ROADMAP.md`.
 
 ```bash
 cp .env.example .env
-docker compose up -d          # postgres, redis, backend, worker, frontend
-npm run db:migrate -w backend
+docker compose up -d
 ```
 
-The frontend requires a reachable Supabase project for auth. This is the main obstacle to a
-fully offline `docker compose up`; self-hosted auth is tracked in `ROADMAP.md`.
+A one-shot `migrate` service applies the Prisma schema and exits 0; the API and
+worker wait for it via `depends_on: condition: service_completed_successfully`, so
+no manual migration step is required. Confirm with:
+
+```bash
+curl -s localhost:3001/health
+# {"status":"healthy","database":"connected",...}
+```
+
+The frontend and API require a reachable Supabase project for auth. This is the
+main obstacle to a fully offline startup; self-hosted auth is tracked in
+`ROADMAP.md` (P2) and designed in `docs/AUTH_DESIGN.md`.
 
 ### Container topology
 
-| Service | Image basis | Port | Notes |
+| Service | Image | Port | Notes |
 |---|---|---|---|
-| `postgres` | postgres:16-alpine | 5432 | Named volume `postgres_data` |
-| `redis` | redis:7-alpine | 6379 | Provisioned, not yet consumed |
-| `backend` | `backend/Dockerfile` | 3001 | Depends on postgres, redis |
-| `worker` | `worker/Dockerfile` | 3002 | Depends on postgres, redis |
-| `frontend` | `frontend/Dockerfile` | 3000 | Next.js standalone output |
+| `postgres` | postgres:16-alpine | 5432 (published as 5434) | Named volume `postgres_data` |
+| `redis` | redis:7-alpine | 6379 | Provisioned, not yet consumed by any code path |
+| `migrate` | backend `development` target | — | Runs `prisma migrate deploy`, then exits 0 |
+| `backend` | backend `development` target | 3001 | Depends on postgres, redis, migrate |
+| `worker` | worker `development` target | 3002 | Single replica only, see below |
+| `frontend` | frontend `development` target | 3000 | Next.js dev server with hot reload |
 
-`docker-compose.prod.yml` and `render.yaml` provide production-oriented variants. NGINX
-configuration for single-host TLS termination is in `nginx/nginx.conf`.
+Each Dockerfile has a `development` target retaining devDependencies and a
+production target that is the default when no `--target` is given. The
+development targets exist because the compose file runs `ts-node-dev` and
+`next dev`; invoking those against a production image built with `--omit=dev`
+makes `npx` fetch a toolchain that does not match the installed TypeScript.
+
+Backend and worker use `node:22-slim` with `openssl` installed. The Prisma query
+engine links against the system OpenSSL at runtime, and Prisma's platform
+detection reads the `openssl` binary to choose which engine to build. The
+`node:*-slim` base image ships neither, so without it `prisma generate` silently
+falls back to the OpenSSL 1.1.x engine and the service cannot start.
+
+`.dockerignore` files exist at the repository root and in `backend/` and
+`frontend/`. They exclude `.env` and `node_modules` from the build context.
+Without them, `COPY . .` copies the host working tree into the image, which both
+overwrites the image's Prisma client with a host-platform one and bakes real
+credentials — database password, Supabase service-role key, Stripe and Resend
+secrets — into an image layer.
+
+The worker must run as exactly one replica. Its last-check timestamps live in
+process memory, so additional replicas issue duplicate probes and duplicate
+alerts. `docker-compose.prod.yml` pins `replicas: 1` for this reason.
+
+`docker-compose.prod.yml` and `render.yaml` provide production variants with
+NGINX for TLS termination. Full instructions in `docs/DEPLOYMENT.md`.
+
+### Database addressing
+
+Two variables exist because one URL cannot serve both cases:
+
+| Variable | Used by | Points at |
+|---|---|---|
+| `DATABASE_URL` | Host tooling — `npm run db:migrate`, Prisma CLI | `localhost:5434` |
+| `DATABASE_URL_DOCKER` | Backend and worker containers | `postgres:5432` |
+
+`localhost` does not resolve inside the compose network. `DATABASE_URL_DOCKER`
+defaults to the bundled database and can be set to target an external instance.
 
 ### Operational scripts
 
@@ -388,13 +433,14 @@ configuration for single-host TLS termination is in `nginx/nginx.conf`.
 | `scripts/deploy.sh` | Pull, build, migrate, restart |
 | `scripts/backup.sh` | `pg_dump` backup |
 | `scripts/validate-env.js` | Fail-fast environment validation |
+| `scripts/audit-licenses.js` | Regenerate or verify `docs/THIRD_PARTY_LICENSES.md` |
 | `docker/start-combined.sh` | Local combined startup |
 
 ### Backup and recovery
 
 `scripts/backup.sh` performs `pg_dump`. There is no automated restore procedure, no
 point-in-time recovery, and no replication configuration in this repository. Recovery
-objectives are not established.
+objectives are not established. Restoring is manual — see `docs/DEPLOYMENT.md`.
 
 ---
 
@@ -437,8 +483,8 @@ worker/     Monitoring scheduler and probe executor
 frontend/   Next.js dashboard and public status page
 supabase/   Supabase auth schema migrations
 nginx/      Reference reverse proxy config
-scripts/    Setup, deploy, backup, validation
-docs/       Reference documentation
+scripts/    Setup, deploy, backup, license audit
+docs/       Reference documentation, see docs/README.md
 ```
 
 ### Branching

@@ -34,3 +34,20 @@ Only **Stripe** remains intentionally disabled while there are no paying custome
 To also route the worker's uptime **alert** emails through Resend (they currently use the backend default transport), add `RESEND_API_KEY` and `FROM_EMAIL` to the Render service.
 
 Everything else — signup, signin, monitor management, background checks, analytics, alerts, public status pages — is verified working on the live deployment.
+
+## Known issues affecting the live deployment
+
+Disclosed rather than hidden. See [SECURITY.md](SECURITY.md) and
+[ROADMAP.md](ROADMAP.md) for detail.
+
+- **SSRF in the monitoring worker (P0).** Any user who can create a monitor can
+  direct the worker at internal addresses or the cloud metadata endpoint. The
+  Render deployment is internet-facing, so this is reachable by anyone who signs
+  up. The public demo should not be treated as safe for untrusted users until the
+  fix lands.
+- **The worker cannot scale past one replica.** Correct on Render, which runs a
+  single combined container. Relevant only if you move to an orchestrator.
+- **No automated restore.** Backups are manual via `scripts/backup.sh`.
+- **The frontend's `/docs` page may lag this repository.** It is a separate
+  in-app surface; the authoritative documentation is in this repository, indexed
+  at [docs/README.md](docs/README.md).
