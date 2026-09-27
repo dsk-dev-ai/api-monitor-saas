@@ -309,7 +309,7 @@ reach the user. The guard reports the refusal through a per-request callback ins
 executor substitutes one uniform message: `Monitor target resolves to a restricted network
 destination.`
 
-Covered by 134 tests in `worker/src`; see `SECURITY.md` for the range tables, the redirect
+Covered by 137 tests in `worker/src`; see `SECURITY.md` for the range tables, the redirect
 policy, and the residual risks.
 
 ## Known gaps

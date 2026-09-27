@@ -51,7 +51,7 @@ fetched user-supplied monitor URLs with no destination validation.
   connect could be replaced by the HTTP client's own error, which both masked the refusal
   and exposed the resolved internal address. The guard now reports through a per-request
   callback and the executor substitutes the uniform message.
-- Added 134 tests across three suites, wired into `npm test -w worker` and CI:
+- Added 137 tests across three suites, wired into `npm test -w worker` and CI:
   `ssrf-policy.test.ts` (range tables, obfuscation, cloud metadata, split-horizon names,
   rebinding, scheme smuggling via `Location`, error text), `executor.test.ts` (redirect
   control flow, method and body handling) and `executor.e2e.test.ts`, which runs the real
@@ -86,6 +86,13 @@ fetched user-supplied monitor URLs with no destination validation.
   step. CI still uses `--passWithNoTests` for the frontend, which has no tests; that is
   called out in [ROADMAP.md](ROADMAP.md) rather than left to be discovered.
 - `docs/AUTH_DESIGN.md` and `docs/COMMERCIAL_BOUNDARY.md` from the R1 documentation pass.
+
+### Fixed
+- A failed check could report `error: ""`, which tells an operator nothing and cannot be
+  distinguished from a monitor that was never scheduled. Observed on a live check against a
+  public host in the running container; the client error in that case carried no message.
+  Every failure path now resolves a diagnostic, falling back to the error name and code
+  before the generic string.
 
 ### Known gaps left open by this change
 - Monitor response bodies are still read in full to evaluate `expectedKeyword`, so a

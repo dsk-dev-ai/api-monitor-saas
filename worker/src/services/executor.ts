@@ -122,6 +122,24 @@ function headersForHop(
   return { headers: {}, dropped: true };
 }
 
+/**
+ * Guarantee a diagnostic on every failed check.
+ *
+ * Observed in the running container: an intermittent failure surfaced as
+ * `{ status: "down", error: "" }`, which tells an operator nothing and cannot be
+ * distinguished from a monitor that was never scheduled. Some client errors carry an
+ * empty `message`, so the name and code are used as fallbacks before giving up.
+ */
+function describeFailure(error: unknown): string {
+  if (error instanceof Error) {
+    if (error.message) return error.message;
+    const code = (error as Error & { code?: string }).code;
+    return code ? `${error.name} (${code})` : error.name;
+  }
+  if (typeof error === 'string' && error) return error;
+  return 'Unknown error';
+}
+
 export async function executeCheck(
   url: string,
   method: Method = 'GET',
@@ -326,10 +344,15 @@ export async function executeCheck(
       if (error.code === 'CERT_HAS_EXPIRED') {
         return { status: 'down', responseTime, error: 'SSL certificate expired' };
       }
-      return { status: 'down', statusCode: error.response?.status, responseTime, error: error.message };
+      return {
+        status: 'down',
+        statusCode: error.response?.status,
+        responseTime,
+        error: describeFailure(error),
+      };
     }
 
-    return { status: 'down', responseTime, error: error instanceof Error ? error.message : 'Unknown error' };
+    return { status: 'down', responseTime, error: describeFailure(error) };
   } finally {
     clearTimeout(deadline);
   }

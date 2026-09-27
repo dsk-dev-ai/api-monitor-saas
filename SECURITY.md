@@ -175,7 +175,7 @@ error shapes for this and neither was used: this is not an API response, it is t
 ### Testing coverage
 
 `worker/src/security/ssrf-policy.test.ts`, `worker/src/services/executor.test.ts`
-and `worker/src/services/executor.e2e.test.ts` — 134 tests, run with
+and `worker/src/services/executor.e2e.test.ts` — 137 tests, run with
 `npm test -w worker`. They cover every range in the tables above, the obfuscated
 encodings, the cloud metadata addresses, split-horizon names, DNS rebinding, every
 redirect case in the list, scheme smuggling via `Location`, and the error text.

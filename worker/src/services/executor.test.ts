@@ -595,6 +595,30 @@ describe('executor — scheme changes across redirects', () => {
   });
 });
 
+describe('executor — every failure carries a diagnostic', () => {
+  it.each([
+    ['an Error with no message', new Error('')],
+    ['an Error with a code but no message', Object.assign(new Error(''), { code: 'ECONNRESET' })],
+    ['a thrown string', 'something went wrong'],
+  ])('describes %s', (_label, thrown) => {
+    // Observed in the running container as `{ status: "down", error: "" }`, which an
+    // operator cannot act on and cannot distinguish from a monitor that never ran.
+    const original = http.request;
+    http.request = (() => {
+      throw thrown;
+    }) as unknown as typeof http.request;
+    try {
+      const result = executeCheck('http://127.0.0.1:1/', 'GET', {}, undefined, 2000);
+      return result.then((r) => {
+        expect(r.status).toBe('down');
+        expect(r.error).toBeTruthy();
+      });
+    } finally {
+      http.request = original;
+    }
+  });
+});
+
 describe('executor — existing check behaviour is preserved', () => {
   it('reports a non-2xx response as down with its status', async () => {
     const target = await startServer((_req, res) => {

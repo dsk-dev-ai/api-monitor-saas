@@ -14,7 +14,7 @@ These are defects or gaps in shipped code, not feature requests.
 
 ### ~~SSRF protection in the monitoring worker~~ — done
 
-**Status:** implemented · 134 tests, mutation-verified
+**Status:** implemented · 137 tests, mutation-verified
 
 Users supplied arbitrary URLs that the worker fetched on their behalf with no destination
 validation, so a monitor could be pointed at `127.0.0.1`, the RFC1918 ranges, the Docker host
@@ -52,10 +52,10 @@ this. Required: a `maxContentLength` on the request and a bounded read of the bo
 
 ### Test suite is effectively empty — partially addressed
 
-**Status:** backend 21 tests, worker 134 · **Severity:** high
+**Status:** backend 21 tests, worker 137 · **Severity:** high
 
 The worker had no tests and CI runs with `--passWithNoTests`, so a fully broken suite still
-reported green. The worker now has a jest setup and 134 tests covering the SSRF policy,
+reported green. The worker now has a jest setup and 137 tests covering the SSRF policy,
 redirect handling, and the executor's check semantics, run in CI.
 
 Still missing: the frontend has no tests, and the alert state machine, the billing routes,
