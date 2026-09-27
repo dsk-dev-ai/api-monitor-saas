@@ -186,16 +186,15 @@ curl -s localhost:3001/health     # expect "status":"healthy"
 npm run build
 npm run lint
 npm run typecheck
-npm test              # backend: 12 tests
+npm test              # backend: 21 tests
 npm test -w worker    # worker: 134 tests
 npm run licenses      # regenerate the license inventory
 ```
 
 Coverage is uneven. The worker suite is substantial and security-critical: it covers the
 SSRF destination policy, redirect handling, and the executor's check semantics, and it
-was mutation-checked — disabling the destination guard makes it fail. The backend has only
-12 tests, covering monitor route validation and the error middleware. The frontend has
-none, and CI still runs with `--passWithNoTests`, so an empty suite would pass. Treat the
+was mutation-checked — disabling the destination guard makes it fail. The backend has 21
+tests, covering monitor route validation and the error middleware. The frontend has none, and CI still runs with `--passWithNoTests`, so an empty suite would pass. Treat the
 frontend and backend as untested rather than healthy.
 
 ## Roadmap

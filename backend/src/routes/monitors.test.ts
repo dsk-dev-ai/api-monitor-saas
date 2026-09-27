@@ -1,21 +1,4 @@
-import { z } from 'zod';
-
-// Since the schemas are not exported from the monitors.ts file,
-// we'll recreate them here for testing purposes
-const createMonitorSchema = z.object({
-  name: z.string().min(1, 'Name is required').max(100),
-  url: z.string().url('Invalid URL'),
-  method: z.enum(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD']).default('GET'),
-  headers: z.record(z.string()).optional().default({}),
-  body: z.string().optional(),
-  interval: z.number().int().min(30).max(3600).default(300),
-  timeout: z.number().int().min(5).max(120).default(30),
-  expectedStatus: z.number().int().min(100).max(599).optional(),
-  expectedKeyword: z.string().optional(),
-  region: z.string().default('global'),
-});
-
-const updateMonitorSchema = createMonitorSchema.partial();
+import { createMonitorSchema, updateMonitorSchema } from './monitors';
 
 describe('Monitor Routes Validation', () => {
   describe('createMonitorSchema', () => {
@@ -61,6 +44,35 @@ describe('Monitor Routes Validation', () => {
 
       const result = createMonitorSchema.safeParse(invalidData);
       expect(result.success).toBe(false);
+    });
+
+    it.each(['file:///etc/passwd', 'ftp://example.com', 'gopher://example.com', 'ws://example.com'])(
+      'should reject a %s target',
+      (url) => {
+        const result = createMonitorSchema.safeParse({ name: 'Test Monitor', url });
+        expect(result.success).toBe(false);
+      }
+    );
+
+    it.each([
+      'http://example.com',
+      'https://example.com',
+      'HTTPS://example.com',
+      'https://example.com:8443/health?x=1',
+    ])('should accept %s', (url) => {
+      expect(createMonitorSchema.safeParse({ name: 'Test Monitor', url }).success).toBe(true);
+    });
+
+    it('should accept a syntactically valid but internal URL, because the worker policy enforces that', () => {
+      // Deliberate. This schema checks shape and scheme only. A private or metadata
+      // address is syntactically valid and is refused at request time by
+      // worker/src/security, not here. Asserting rejection here would be a false claim
+      // about where the boundary is.
+      const result = createMonitorSchema.safeParse({
+        name: 'Internal',
+        url: 'http://169.254.169.254/latest/meta-data/',
+      });
+      expect(result.success).toBe(true);
     });
 
     it('should apply defaults', () => {

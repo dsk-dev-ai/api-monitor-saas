@@ -73,6 +73,14 @@ fetched user-supplied monitor URLs with no destination validation.
   [SECURITY.md](SECURITY.md).
 
 ### Added
+- The monitor create/update schema now rejects a non-`http`/`https` target, so the mistake
+  is reported when the monitor is created instead of surfacing as a failed check later.
+  This is a shape check and deliberately not the security boundary: a syntactically valid
+  `http://169.254.169.254/...` is still accepted here and refused by the worker policy, and
+  a test asserts exactly that so the boundary is not misrepresented.
+- `backend/src/routes/monitors.test.ts` was testing a *copy* of the Zod schema rather than
+  the real one, so it would have kept passing if the actual schema changed. The schemas are
+  now exported and imported. Backend coverage is 21 tests, up from 12.
 - The worker has a test suite and tooling for the first time: `worker/jest.config.js`,
   an ESLint flat config, `test`/`test:watch`/`test:cov` scripts, and the corresponding CI
   step. CI still uses `--passWithNoTests` for the frontend, which has no tests; that is

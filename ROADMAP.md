@@ -52,7 +52,7 @@ this. Required: a `maxContentLength` on the request and a bounded read of the bo
 
 ### Test suite is effectively empty — partially addressed
 
-**Status:** backend 12 tests, worker 134 · **Severity:** high
+**Status:** backend 21 tests, worker 134 · **Severity:** high
 
 The worker had no tests and CI runs with `--passWithNoTests`, so a fully broken suite still
 reported green. The worker now has a jest setup and 134 tests covering the SSRF policy,
