@@ -41,11 +41,11 @@ After changing any `package.json`, regenerate the license inventory and commit t
 result:
 
 ```bash
-node scripts/audit-licenses.js
+npm run licenses
 ```
 
-CI runs `node scripts/audit-licenses.js --check` and fails if the inventory is
-stale or a non-permissive license appears. The reasoning is in
+CI runs `npm run licenses:check` and fails if the inventory is stale or a
+non-permissive license appears. The audit reads only the lockfile, so it needs no install. The reasoning is in
 [docs/COMMERCIAL_BOUNDARY.md](docs/COMMERCIAL_BOUNDARY.md) — the community
 edition must stay freely redistributable, which it could not be under a copyleft
 dependency.

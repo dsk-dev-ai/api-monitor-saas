@@ -46,10 +46,11 @@ builds images and never runs the stack. All are fixed and verified end to end.
   start, so a fresh clone no longer needs a manual `db:migrate` step. Wired into
   both `docker-compose.yml` and `docker-compose.prod.yml`.
 - Explicit `development` build targets for backend, worker, and frontend.
-- `scripts/audit-licenses.js` and `docs/THIRD_PARTY_LICENSES.md`. All 72 direct
-  dependencies are permissive, with no copyleft. The script reads the lockfiles
-  rather than `node_modules` so it is reproducible on a clean checkout, and exits
-  non-zero on a non-permissive license.
+- `scripts/audit-licenses.js`, runnable as `npm run licenses`, and
+  `docs/THIRD_PARTY_LICENSES.md`. All 72 direct dependencies are permissive, with
+  no copyleft. The audit reads only the committed lockfile, so it needs no install
+  and cannot be skewed by a stale `node_modules`, and it exits non-zero on a
+  non-permissive license.
 - CI job enforcing that the license inventory is current and contains no copyleft.
 - `docs/DEPLOYMENT.md` covering local, single-host, and managed-platform
   deployment, with troubleshooting and a table of known production limitations.

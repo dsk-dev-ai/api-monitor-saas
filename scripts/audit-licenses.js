@@ -1,14 +1,15 @@
 #!/usr/bin/env node
 /**
- * Regenerates docs/THIRD_PARTY_LICENSES.md from the committed lockfiles.
+ * Regenerates docs/THIRD_PARTY_LICENSES.md from the committed lockfile.
  *
  * Usage:
- *   npm ci
  *   node scripts/audit-licenses.js
+ *   node scripts/audit-licenses.js --check   # exit 1 if the committed file is stale
  *
- * Reads the resolved license field of every direct dependency in each workspace
- * and classifies it as permissive or copyleft. Exits non-zero if a copyleft or
- * unknown-license dependency is introduced, so CI can enforce the policy.
+ * No install required. Reads the resolved license field of every direct dependency in each
+ * workspace, resolved the way Node resolves it, and classifies it as permissive or copyleft.
+ * Exits non-zero if a copyleft or unknown-license dependency is introduced, so CI can
+ * enforce the policy.
  */
 const fs = require('fs');
 const path = require('path');
@@ -17,26 +18,35 @@ const WORKSPACES = ['backend', 'frontend', 'worker'];
 const ROOT = path.join(__dirname, '..');
 
 /**
- * The lockfiles are the source of truth, not node_modules. Reading the lockfile means the
+ * The lockfile is the source of truth, not node_modules. Reading the lockfile means the
  * audit is reproducible on a clean checkout with no install, and cannot be fooled by a stale
  * or partially populated node_modules tree.
+ *
+ * A workspace lockfile can contain several copies of the same package at different versions
+ * (`node_modules/react` and `frontend/node_modules/react`), so entries are NOT indexed by
+ * name. Doing so silently reports whichever copy happened to be seen first, which is a
+ * different version than the workspace actually resolves. Instead we keep the full map and
+ * look each dependency up the way Node does: nearest `node_modules` walking up to the root.
  */
 function readLockfile() {
   const lockPath = path.join(ROOT, 'package-lock.json');
   if (!fs.existsSync(lockPath)) return {};
   const lock = JSON.parse(fs.readFileSync(lockPath, 'utf8'));
-  const index = {};
-  for (const [key, meta] of Object.entries(lock.packages || {})) {
-    if (!key) continue;
-    const name = key.slice(key.lastIndexOf('node_modules/') + 'node_modules/'.length);
-    if (!index[name]) {
-      index[name] = {
-        version: meta.version || 'UNKNOWN',
-        license: meta.license || 'UNKNOWN',
-      };
-    }
+  return lock.packages || {};
+}
+
+/** Resolve `name` as required from directory `fromDir`, mirroring Node's lookup order. */
+function resolveLocked(lock, fromDir, name) {
+  let dir = fromDir;
+  for (;;) {
+    const key = path.relative(ROOT, path.join(dir, 'node_modules', name)).split(path.sep).join('/');
+    const entry = lock[key];
+    if (entry) return entry;
+    if (dir === ROOT) return null;
+    const parent = path.dirname(dir);
+    if (parent === dir) return null;
+    dir = parent;
   }
-  return index;
 }
 
 const PERMISSIVE = new Set(['MIT', 'Apache-2.0', 'BSD-2-Clause', 'BSD-3-Clause', 'ISC', '0BSD']);
@@ -68,6 +78,7 @@ function collect() {
     const pkgPath = path.join(ROOT, ws, 'package.json');
     if (!fs.existsSync(pkgPath)) continue;
     const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+    const wsDir = path.join(ROOT, ws);
 
     for (const field of ['dependencies', 'devDependencies']) {
       const scope = field === 'devDependencies' ? 'dev' : 'prod';
@@ -75,30 +86,17 @@ function collect() {
         if (seen.has(name)) continue;
         seen.add(name);
 
-        const locked = lock[name];
-        const dir = path.join(ROOT, 'node_modules', name);
-        let version = 'UNKNOWN';
-        let license = 'UNKNOWN';
+        const locked = resolveLocked(lock, wsDir, name) || {};
+        const license = locked.license || 'UNKNOWN';
 
-        if (locked) {
-          version = locked.version;
-          license = locked.license;
-        }
-
-        // Prefer the installed package.json when present: the lockfile omits `license` for
-        // some entries, and the on-disk manifest is the authoritative license declaration.
-        if (fs.existsSync(dir)) {
-          try {
-            const meta = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf8'));
-            version = meta.version || version;
-            license =
-              meta.license || (meta.licenses || []).map((l) => l.type || l).join(', ') || license;
-          } catch {
-            /* unreadable manifest falls through to lockfile values */
-          }
-        }
-
-        rows.push({ name, version, license, ws, scope, kind: classify(license) });
+        rows.push({
+          name,
+          version: locked.version || 'UNKNOWN',
+          license,
+          ws,
+          scope,
+          kind: classify(license),
+        });
       }
     }
   }
@@ -161,10 +159,15 @@ proprietary edition relates to this code.
 
 ## Audit method
 
-Dependencies are resolved from the committed \`package-lock.json\` files. Each installed
-package's \`package.json\` \`license\` field is read directly; nothing is inferred from the
-package name. Versions below are the resolved versions pinned by the lockfiles, so this
-document is reproducible rather than approximate.
+Licenses and versions come from the committed \`package-lock.json\`, resolved per workspace
+the way Node resolves them: nearest \`node_modules\` first, walking up to the root. This
+matters because a workspace lockfile can hold several copies of one package — \`eslint\`
+resolves to 8.57.1 in \`frontend/\` and 10.5.0 in \`backend/\` — so looking a package up by
+name alone reports whichever copy was seen first, not the one in use.
+
+\`node_modules\` is never read. The output is therefore identical on a clean checkout with
+no install, and cannot be skewed by a stale or partially populated tree. Nothing is inferred
+from package names.
 
 Regenerate after any dependency change:
 
@@ -223,7 +226,11 @@ ${table}
   from \`schema.prisma\`. Generated client output is not third-party source and is covered by
   this repository's license; the query engine binaries downloaded at runtime remain
   Apache-2.0 third-party artifacts.
-- **\`bullmq\`, \`ioredis\`** — MIT. Worker job queue and Redis client.
+- **\`bullmq\`, \`ioredis\`** — MIT. Declared in \`worker/package.json\` but **never imported
+  anywhere in the codebase**. The worker schedules in-process with \`setInterval\` and
+  \`node-cron\`. The Redis-backed queue that would let it scale horizontally is not
+  implemented; see \`ROADMAP.md\` (P1). Listed here because a dependency is still shipped
+  and licensed, and a buyer inheriting it should know it is unused.
 - **Binary assets** — the only bundled non-source asset is \`.github/api-monitor-og.svg\`,
   authored for this project. \`lucide-react\` (ISC) is consumed as an icon library dependency and
   is not redistributed as source.

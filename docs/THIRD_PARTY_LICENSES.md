@@ -24,10 +24,15 @@ proprietary edition relates to this code.
 
 ## Audit method
 
-Dependencies are resolved from the committed `package-lock.json` files. Each installed
-package's `package.json` `license` field is read directly; nothing is inferred from the
-package name. Versions below are the resolved versions pinned by the lockfiles, so this
-document is reproducible rather than approximate.
+Licenses and versions come from the committed `package-lock.json`, resolved per workspace
+the way Node resolves them: nearest `node_modules` first, walking up to the root. This
+matters because a workspace lockfile can hold several copies of one package — `eslint`
+resolves to 8.57.1 in `frontend/` and 10.5.0 in `backend/` — so looking a package up by
+name alone reports whichever copy was seen first, not the one in use.
+
+`node_modules` is never read. The output is therefore identical on a clean checkout with
+no install, and cannot be skewed by a stale or partially populated tree. Nothing is inferred
+from package names.
 
 Regenerate after any dependency change:
 
@@ -73,7 +78,7 @@ licenses below no matter how the surrounding application is licensed.
 
 | Package | Version | License | Workspace | Scope |
 |---|---|---|---|---|
-| `@eslint/js` | 8.57.1 | MIT | backend | dev |
+| `@eslint/js` | 10.0.1 | MIT | backend | dev |
 | `@radix-ui/react-avatar` | 1.2.0 | MIT | frontend | prod |
 | `@radix-ui/react-dialog` | 1.1.16 | MIT | frontend | prod |
 | `@radix-ui/react-dropdown-menu` | 2.1.17 | MIT | frontend | prod |
@@ -107,8 +112,8 @@ licenses below no matter how the surrounding application is licensed.
 | `bullmq` | 5.78.0 | MIT | worker | prod |
 | `clsx` | 2.1.1 | MIT | frontend | prod |
 | `cors` | 2.8.6 | MIT | backend | prod |
-| `date-fns` | 2.30.0 | MIT | frontend | prod |
-| `eslint` | 8.57.1 | MIT | backend | dev |
+| `date-fns` | 3.6.0 | MIT | frontend | prod |
+| `eslint` | 10.5.0 | MIT | backend | dev |
 | `eslint-config-next` | 14.2.35 | MIT | frontend | dev |
 | `express` | 4.22.2 | MIT | backend | prod |
 | `express-rate-limit` | 7.5.1 | MIT | backend | prod |
@@ -159,7 +164,11 @@ licenses below no matter how the surrounding application is licensed.
   from `schema.prisma`. Generated client output is not third-party source and is covered by
   this repository's license; the query engine binaries downloaded at runtime remain
   Apache-2.0 third-party artifacts.
-- **`bullmq`, `ioredis`** — MIT. Worker job queue and Redis client.
+- **`bullmq`, `ioredis`** — MIT. Declared in `worker/package.json` but **never imported
+  anywhere in the codebase**. The worker schedules in-process with `setInterval` and
+  `node-cron`. The Redis-backed queue that would let it scale horizontally is not
+  implemented; see `ROADMAP.md` (P1). Listed here because a dependency is still shipped
+  and licensed, and a buyer inheriting it should know it is unused.
 - **Binary assets** — the only bundled non-source asset is `.github/api-monitor-og.svg`,
   authored for this project. `lucide-react` (ISC) is consumed as an icon library dependency and
   is not redistributed as source.

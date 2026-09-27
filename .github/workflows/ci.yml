@@ -94,7 +94,7 @@ jobs:
       # MIT and depends on staying commercially redistributable, so this is
       # enforced mechanically rather than by review.
       - name: Verify license inventory is current
-        run: node scripts/audit-licenses.js --check
+        run: npm run licenses:check --silent
 
   frontend:
     name: Frontend Build, Lint & Typecheck

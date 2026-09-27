@@ -24,7 +24,9 @@
     "db:generate": "npm run db:generate -w backend",
     "test": "npm run test -w backend",
     "lint": "npm run lint --workspaces",
-    "typecheck": "npm run typecheck --workspaces"
+    "typecheck": "npm run typecheck --workspaces",
+    "licenses": "node scripts/audit-licenses.js",
+    "licenses:check": "node scripts/audit-licenses.js --check"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
