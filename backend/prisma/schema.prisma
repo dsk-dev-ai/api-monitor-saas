@@ -1,6 +1,12 @@
 generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = ["native", "linux-musl"]
+  provider = "prisma-client-js"
+  // "native" resolves to the engine matching the platform Prisma runs on, so the same
+  // schema works on Alpine and Debian-based images. Hardcoding "linux-musl" here pinned
+  // the client to the musl engine and broke every Debian-based image, because
+  // libquery_engine-linux-musl links against libssl.so.1.1 which those images lack.
+  // Add explicit targets here only if you need a prebuilt client for another platform,
+  // and generate it in an image that matches the runtime.
+  binaryTargets = ["native"]
 }
 
 datasource db {

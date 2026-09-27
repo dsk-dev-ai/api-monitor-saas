@@ -1,18 +1,229 @@
-# API Monitor Roadmap
+# Roadmap
 
-## v2.0
-- Authentication
-- Monitor Management
-- Analytics Dashboard
-- Alert System
-- Worker Service
+Planned work. **Nothing in this file is implemented.** For what actually exists today, read
+[ARCHITECTURE.md](ARCHITECTURE.md) and the feature matrix in [README.md](README.md).
 
-## v2.1
-- Team Workspaces
-- Public Status Pages
-- Stripe Billing
+Ordered by priority, not by release. Items marked **P0** are correctness, security, or
+reliability problems that affect the current system.
 
-## v3.0
-- Multi-region Monitoring
-- Incident Management
-- Advanced Reporting
+---
+
+## P0 — Correctness and security
+
+These are defects or gaps in shipped code, not feature requests.
+
+### SSRF protection in the monitoring worker
+
+**Status:** not implemented · **Severity:** high
+
+Users supply arbitrary URLs that the worker fetches on their behalf. There is no destination
+validation, so a monitor can be pointed at `127.0.0.1`, the `10.0.0.0/8` and `172.16.0.0/12`
+private ranges, the Docker host gateway, or cloud metadata endpoints such as
+`169.254.169.254`. A user can use the worker as a proxy to probe internal infrastructure.
+
+Required:
+
+- Resolve the hostname and reject private, loopback, link-local, and reserved ranges
+- Re-check the resolved address at connect time to block DNS rebinding
+- Enforce an allow/deny list for operators
+- Restrict redirect following, or re-validate every redirect hop
+- Cap response body size to prevent memory exhaustion
+
+### Test suite is effectively empty
+
+**Status:** 2 test files, 178 lines · **Severity:** high
+
+The worker and frontend have no tests and CI runs with `--passWithNoTests`, so a fully broken
+suite still reports green. Required: unit coverage for `executeCheck` and the alert
+state machine, integration coverage for the monitor and billing routes against real
+postgres and Redis, and an end-to-end path covering signup through incident to alert.
+
+### Multi-replica worker causes duplicate checks
+
+**Status:** by design limitation · **Severity:** medium
+
+Last-check timestamps live in a per-process `Map`, so the interval filter has no cross-process
+view. Two worker replicas issue duplicate probes and duplicate alerts. The system is
+correct only at exactly one worker instance, and nothing enforces that. Scaling horizontally
+requires moving scheduling state into Redis.
+
+### Status transitions lost on worker restart
+
+**Status:** partial mitigation · **Severity:** medium
+
+Status history is rehydrated from the most recent `Check` per monitor at boot, which is the
+right idea but uses `findMany` with `distinct` and no `orderBy` guarantee per group. A monitor
+that went down and recovered entirely within the restart window produces no alert.
+
+### Row Level Security not enabled
+
+**Status:** not implemented · **Severity:** medium
+
+All tenancy enforcement is in application code. A single query bug in a route handler exposes
+cross-tenant data. Enabling RLS would make the database the backstop.
+
+---
+
+## P1 — Reliability
+
+### Redis-backed job queue
+
+**Status:** dependency present, integration absent · **Severity:** high
+
+`bullmq` and `ioredis` are declared in `worker/package.json` and a Redis service runs in
+Compose, but no code path imports either. Scheduling is `setInterval` plus an in-process `Map`.
+
+Required: BullMQ queue and worker, exponential backoff, retry with attempt ceilings,
+dead-letter queue, job idempotency keys, graceful drain on shutdown, and a queue-depth admin
+view. This single change resolves the multi-replica duplication problem, the lost-transition
+problem, and the no-retry problem together.
+
+### Retention and storage growth
+
+`Check` rows accumulate at the full probe rate. The daily sweep deletes rows older than
+`CLEANUP_DAYS` (default 90) with a single unbounded `deleteMany`, which can lock and balloon
+the WAL on a large table. Required: batched deletion, a covering index on `checkedAt`, and
+optional downsampling of old checks into hourly or daily aggregates.
+
+### Health and observability beyond `/health`
+
+`GET /health` checks database and Redis reachability and nothing else. Required: worker
+liveness and heartbeat age, queue depth and oldest-job age, error rate and p95 latency,
+structured log shipping, and Prometheus-format metrics.
+
+### Graceful shutdown does not drain
+
+`SIGTERM` disconnects Prisma and exits immediately, abandoning any in-flight batch. Required:
+stop accepting new work, await in-flight probes up to a deadline, then exit.
+
+---
+
+## P2 — Self-hosted authentication
+
+**Status:** not implemented · **Severity:** high for self-hosting
+
+Auth is delegated to Supabase. `docker compose up` does not produce a working login without a
+Supabase project and keys, which blocks fully offline deployment and air-gapped installs.
+
+Required: email/password with verification, password reset, session and refresh-token
+rotation stored in the application database, account management, and migration from existing
+Supabase accounts. `bcryptjs` and `jsonwebtoken` are already dependencies. Enterprise SSO
+(SAML and OIDC) sits on top of this and is a separate item below.
+
+---
+
+## P3 — Organization and access control
+
+### Workspaces and teams
+
+**Status:** placeholder pages only · **Severity:** medium
+
+`frontend/src/app/(dashboard)/team/page.tsx` and `workspaces/page.tsx` render without backing
+API or data model.
+
+Required: `Organization`, `Workspace`, and `Membership` tables; a workspace scoping layer over
+the existing `userId`-owned models; member invitations with expiry; and per-workspace
+monitor, alert, and status-page isolation.
+
+### RBAC
+
+**Status:** not implemented · **Severity:** medium
+
+Authorization is owner-scoped only. Required: `Owner`, `Admin`, `Member`, `Viewer` roles, a
+permission model such as `monitor.read` / `monitor.create` / `monitor.update` /
+`monitor.delete` / `incident.manage` / `team.manage` / `billing.manage`, and server-side
+enforcement on every route. Hiding controls in the UI is not enforcement.
+
+### Audit log
+
+**Status:** not implemented · **Severity:** medium
+
+Required: an append-only `AuditEvent` table capturing actor, workspace, action, resource,
+resource ID, timestamp, and source IP, with an admin query UI. Expected by any organization
+running shared infrastructure.
+
+---
+
+## P4 — Alerting and communication
+
+### Multi-channel notification engine
+
+**Status:** email only, hardcoded · **Severity:** medium
+
+The worker calls `sendEmailAlert` directly on status change. There is no provider abstraction
+and no per-monitor channel configuration.
+
+Required: a `NotificationProvider` interface with Email, Slack, generic webhook, and SMS
+adapters; per-monitor channel selection; retry and backoff per channel; and delivery
+attempts recorded against the alert.
+
+### Alert improvements
+
+Maintenance-window suppression, threshold configuration beyond binary up/down, flapping
+detection, and configurable escalation policy.
+
+---
+
+## P5 — Status pages and incidents
+
+### Status page management UI
+
+**Status:** API and public view only · **Severity:** medium
+
+CRUD endpoints and the public `/status/[slug]` page work. There is no editor for composing a
+page, attaching monitors, or publishing. Required: builder UI, component grouping, and
+customization.
+
+### Incident management
+
+**Status:** not implemented · **Severity:** medium
+
+Alerts are individual rows with no grouping, no operator acknowledgement workflow beyond a
+single PATCH, and no postmortem field. Required: first-class `Incident` aggregating the checks
+and alerts that constitute an outage, `Investigating` / `Identified` / `Monitoring` /
+`Resolved` lifecycle, and status-page propagation.
+
+### Maintenance windows
+
+Scheduled suppression that prevents false alerts during planned downtime, and displays
+maintenance state on the public status page.
+
+---
+
+## P6 — Billing and entitlements
+
+**Status:** backend only · **Severity:** medium
+
+Stripe checkout, portal, and webhooks are implemented server-side. The frontend billing page
+does not complete a purchase, and plan limits are advisory rather than enforced.
+
+Required: complete checkout UI, plan-to-entitlement mapping, server-side enforcement of
+monitor count and check-interval limits, a quota-exhaustion path, webhook-driven subscription
+state reconciliation, and invoice history.
+
+---
+
+## P7 — Scale and operations
+
+Ordered by value, not by effort. None of this is needed for a single-host deployment.
+
+- Read replicas or a dedicated analytics store as `Check` volume grows
+- Regional probe execution, which the `region` field on `Check` already anticipates
+- Horizontal API scaling, which is safe today only because the API is stateless
+- Bulk import and export of monitors
+- Monitor templates and folders
+- Synthetic multi-step transaction checks
+- TLS certificate management and automated renewal for self-hosted installs
+- Kubernetes or Swarm manifests, if multi-host deployment becomes a real requirement
+
+---
+
+## Explicitly not planned
+
+Recording these so they are not mistaken for oversights:
+
+- **Mobile app.** No evidence of demand, and it would consume the whole roadmap.
+- **CLI tool.** `curl` against the API covers the same ground today.
+- **AI assistant.** Would add an external model dependency to a monitoring tool that should
+  fail predictably.
+- **Microservice decomposition.** Three services is the right size for this workload.

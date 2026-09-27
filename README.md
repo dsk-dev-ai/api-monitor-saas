@@ -66,22 +66,37 @@ See [`ENV_GUIDE.txt`](ENV_GUIDE.txt) for exactly where each value comes from.
 ### 3. Start with Docker (recommended)
 
 ```bash
+cp .env.example .env
+# Fill in at minimum: SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY
 docker compose up -d
-
-# Apply the database schema
-docker compose exec backend npx prisma db push
 ```
+
+The stack comes up on its own — a one-shot `migrate` service applies the Prisma schema
+before the API and worker start, so there is no manual migration step.
 
 Then open:
 - Dashboard: http://localhost:3000
 - API: http://localhost:3001
 - Health: http://localhost:3001/health
 
+To confirm it is working:
+
+```bash
+curl -s localhost:3001/health
+# {"status":"healthy","database":"connected",...}
+```
+
+Behind a mirror or proxy, pass the registry at build time:
+
+```bash
+docker compose build --build-arg NPM_REGISTRY=https://registry.example.com
+```
+
 ### 4. Manual (development)
 
 ```bash
 npm install
-npx prisma db push --schema backend/prisma/schema.prisma
+npm run db:migrate
 npm run db:generate
 npm run dev
 ```
@@ -90,12 +105,13 @@ npm run dev
 
 | Layer | Technology |
 |-------|-----------|
-| **Frontend** | Next.js 14, Tailwind CSS, shadcn/ui, Recharts, Zustand |
-| **Backend** | Node.js 22, Express.js, Prisma ORM, Zod, Winston |
+| **Frontend** | Next.js 14, Tailwind CSS, Radix UI, Recharts, Zustand |
+| **Backend** | Node.js 22, Express.js, Prisma ORM, Zod, Winston, helmet |
 | **Worker** | Node.js, Axios, node-cron |
 | **Database** | PostgreSQL 16 |
+| **Cache** | Redis 7 (provisioned; queue integration in progress) |
 | **Auth** | Supabase Auth (JWT) |
-| **Payments** | Stripe (Checkout + Billing Portal) — backend | 
+| **Payments** | Stripe (Checkout + Billing Portal) — backend only |
 | **Email** | Resend API — worker alerts |
 | **Deploy** | Docker Compose |
 
@@ -116,7 +132,7 @@ npm run dev
 
 The **worker** is the engine: it loads active monitors on an interval, runs HTTP probes (`worker/src/services/executor.ts`), stores each result as a `Check`, detects status changes, and writes `Alert` records (emailing via Resend when configured).
 
-See [ARCHITECTURE.md](ARCHITECTURE.md) for the full system design and [DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md) for the roadmap.
+See [ARCHITECTURE.md](ARCHITECTURE.md) for how the system actually works, [ROADMAP.md](ROADMAP.md) for what is planned, and [docs/](docs/) for the commercial boundary, auth design, and third-party license inventory.
 
 ## API
 

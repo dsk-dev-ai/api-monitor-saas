@@ -29,12 +29,17 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      target: development
     ports:
       - "3001:3001"
     environment:
       - NODE_ENV=development
       - PORT=3001
-      - DATABASE_URL=${DATABASE_URL}
+      # Container-internal database address. DATABASE_URL in .env points at
+      # localhost:5434 for tooling run directly on the host, which is unreachable
+      # from inside the compose network, so the two are configured separately.
+      # Override DATABASE_URL_DOCKER to target an external database instead.
+      - DATABASE_URL=${DATABASE_URL_DOCKER:-postgresql://api_monitor:dev_password@postgres:5432/api_monitor}
       - REDIS_URL=redis://redis:6379
       - SUPABASE_URL=${SUPABASE_URL}
       - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
@@ -50,6 +55,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     volumes:
       - ./backend:/app
       - /app/node_modules
@@ -59,9 +66,10 @@ services:
     build:
       context: .
       dockerfile: worker/Dockerfile
+      target: development
     environment:
       - NODE_ENV=development
-      - DATABASE_URL=${DATABASE_URL}
+      - DATABASE_URL=${DATABASE_URL_DOCKER:-postgresql://api_monitor:dev_password@postgres:5432/api_monitor}
       - REDIS_URL=redis://redis:6379
       - CHECK_INTERVAL_SECONDS=30
       - RESEND_API_KEY=${RESEND_API_KEY}
@@ -71,15 +79,39 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     volumes:
       - ./worker:/app
       - /app/node_modules
     command: npx ts-node-dev --respawn --transpile-only src/index.ts
+    # The worker exits non-zero when the database schema is missing, which is the
+    # normal state on a first `docker compose up` before migrations run. Restarting
+    # lets it recover on its own once `npm run db:migrate` completes.
+    restart: unless-stopped
+
+  migrate:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: development
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=${DATABASE_URL_DOCKER:-postgresql://api_monitor:dev_password@postgres:5432/api_monitor}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # Applies the Prisma migrations, then exits. Backend and worker wait for this to
+    # complete successfully, so a fresh clone comes up with a usable schema without a
+    # manual migration step.
+    command: npx prisma migrate deploy --schema prisma/schema.prisma
+    restart: "no"
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      target: development
     ports:
       - "3000:3000"
     environment:
@@ -90,6 +122,9 @@ services:
       - backend
     volumes:
       - ./frontend:/app
+      # Anonymous volume keeps the image's node_modules visible. Without it the bind
+      # mount above shadows them and `next dev` fails with "next: not found".
+      - /app/node_modules
     command: npm run dev
 
 volumes:

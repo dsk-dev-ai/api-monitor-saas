@@ -1,404 +1,458 @@
-# API Monitor SaaS v2.0 — Advanced Architecture
-## Ubuntu 24.04 LTS | Production-Grade | Microservices-Ready
+# Architecture
+
+How API Monitor SaaS actually works today.
+
+**This document describes only what is implemented in this repository.** Anything not built
+is listed in [ROADMAP.md](ROADMAP.md) and must not be presented as existing here.
+
+Last verified against commit `v3.5.0-community`.
 
 ---
 
-## 1. SYSTEM ARCHITECTURE OVERVIEW
+## 1. System overview
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                              CLIENT LAYER                                    │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐   │
-│  │   Web App    │  │  Mobile App  │  │   CLI Tool   │  │  Public API  │   │
-│  │   Next.js    │  │   (Future)   │  │   (Future)   │  │   REST/Graph │   │
-│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘   │
-└─────────┼─────────────────┼─────────────────┼─────────────────┼─────────────┘
-          │                 │                 │                 │
-          └─────────────────┴─────────────────┴─────────────────┘
-                                    │
-                         ┌──────────┴──────────┐
-                         │   Cloudflare CDN  │  (SSL/Edge Cache/DDoS)
-                         └──────────┬──────────┘
-                                    │
-┌───────────────────────────────────┴─────────────────────────────────────────┐
-│                           GATEWAY LAYER                                      │
-│  ┌─────────────────────────────────────────────────────────────────────┐   │
-│  │                         NGINX Reverse Proxy                          │   │
-│  │  • SSL Termination | Rate Limiting | Load Balancing | Static Assets  │   │
-│  └─────────────────────────────┬───────────────────────────────────────┘   │
-└────────────────────────────────┼────────────────────────────────────────────┘
-                                 │
-┌────────────────────────────────┼────────────────────────────────────────────┐
-│                      APPLICATION LAYER (Docker Swarm)                        │
-│                                                                               │
-│  ┌─────────────────────┐    ┌─────────────────────┐    ┌──────────────────┐  │
-│  │   API Gateway       │    │   Worker Service    │    │  Webhook Service │  │
-│  │   (Express.js)      │    │   (Node.js Cron)    │    │  (Express.js)    │  │
-│  │   Port: 3001        │    │   Port: 3002        │    │  Port: 3003      │  │
-│  │   • Auth            │    │   • Health Checks   │    │  • Stripe Webhook│  │
-│  │   • Monitors CRUD   │    │   • Alert Dispatch  │    │  • Email Webhook │  │
-│  │   • Analytics       │    │   • Log Aggregation │    │  • Slack Webhook │  │
-│  │   • Billing         │    │                     │    │                  │  │
-│  └──────────┬──────────┘    └──────────┬──────────┘    └────────┬─────────┘  │
-│             │                          │                      │             │
-│             └──────────────────────────┼──────────────────────┘             │
-│                                        │                                    │
-│  ┌─────────────────────────────────────┴─────────────────────────────────┐  │
-│  │                    Message Queue (Redis/BullMQ)                      │  │
-│  │  • Check Jobs Queue | Alert Jobs Queue | Email Queue | Webhook Queue │  │
-│  └─────────────────────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────────────────┘
-                                 │
-┌────────────────────────────────┼────────────────────────────────────────────┐
-│                      DATA LAYER (Managed Services)                         │
-│                                                                               │
-│  ┌─────────────────────┐    ┌─────────────────────┐    ┌──────────────────┐  │
-│  │   PostgreSQL        │    │   Redis Cache       │    │  Object Storage  │  │
-│  │   (Supabase/        │    │   (Upstash/         │    │  (Cloudflare R2  │  │
-│  │    Self-hosted)     │    │    Self-hosted)     │    │   /AWS S3)       │  │
-│  │   • Prisma ORM      │    │   • Session Store   │    │  • Log Backups   │  │
-│  │   • Multi-tenant    │    │   • Job Queue       │    │  • Exports       │  │
-│  │   • Row-level       │    │   • Rate Limiting   │    │                  │  │
-│  │     Security        │    │   • Pub/Sub         │    │                  │  │
-│  └─────────────────────┘    └─────────────────────┘    └──────────────────┘  │
-└─────────────────────────────────────────────────────────────────────────────┘
-                                 │
-┌────────────────────────────────┼────────────────────────────────────────────┐
-│                      EXTERNAL SERVICES LAYER                                 │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐   │
-│  │   Supabase   │  │    Stripe    │  │    Resend    │  │   Slack API  │   │
-│  │   Auth       │  │   Payments   │  │   Email      │  │   Alerts     │   │
-│  └──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘   │
-└─────────────────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────┐
+│                         BROWSER                                   │
+│                                                                    │
+│   Next.js 14 dashboard (App Router) — frontend/src/app              │
+│   • login / signup                                                 │
+│   • monitors list, create wizard, detail                           │
+│   • analytics overview + per-monitor charts                        │
+│   • alerts list                                                     │
+│   • billing page                                                    │
+│   • settings, team, workspaces  ← placeholder pages, no backend   │
+│   • public status page  /status/[slug]                             │
+└───────────────────────────┬────────────────────────────────────────┘
+                            │ HTTPS, Bearer JWT
+                            ▼
+┌────────────────────────────────────────────────────────────────────┐
+│                     API  (Express, port 3001)                       │
+│   backend/src                                                      │
+│   • helmet, CORS allowlist, morgan, express-rate-limit             │
+│   • GET /health — DB + Redis reachability                          │
+│   • /api/v1/auth        Supabase-backed session lifecycle         │
+│   • /api/v1/monitors    CRUD, pause/resume, check history         │
+│   • /api/v1/analytics   overview, uptime, response time           │
+│   • /api/v1/alerts      list, stats, acknowledge                   │
+│   • /api/v1/status-pages  CRUD + unauthenticated public/:slug     │
+│   • /api/v1/billing     plans, subscription, checkout, portal,    │
+│                         webhook (raw-body signature verified)     │
+└───────────┬───────────────────────────────────┬────────────────────┘
+            │ Prisma                            │
+            ▼                                   ▼
+┌────────────────────────┐        ┌──────────────────────────────────┐
+│  PostgreSQL 16         │        │  Redis 7                         │
+│  7 models              │        │  Provisioned for the queue work  │
+│  (backend/prisma)      │        │  tracked in ROADMAP.md.           │
+│                        │        │  Not read by any code path yet.   │
+└───────────▲────────────┘        └──────────────────────────────────┘
+            │
+            │ Prisma
+┌───────────┴────────────────────────────────────────────────────────┐
+│                   WORKER  (Node, port 3002)                        │
+│   worker/src                                                       │
+│   • setInterval — check cycle, min 30s (CHECK_INTERVAL_SECONDS)    │
+│   • node-cron  — daily 03:00 retention sweep (CLEANUP_DAYS = 90)   │
+│   • fetches active, non-paused monitors in batches of 10           │
+│   • in-process Map holds last status per monitor to diff state     │
+│   • on change: writes Alert row, sends Resend email, resolves      │
+│     sibling triggered alerts                                       │
+└────────────────────────────────────────────────────────────────────┘
 ```
+
+### Reverse proxy (optional)
+
+`nginx/nginx.conf` is provided as a reference config for TLS termination and proxying to the
+API and frontend. It is not required to run locally and is not started by
+`docker-compose.yml`.
 
 ---
 
-## 2. TECHNOLOGY STACK
+## 2. Technology stack
 
-### Core Infrastructure
-| Component | Technology | Version | Purpose |
-|-----------|-----------|---------|---------|
-| OS | Ubuntu Server | 24.04 LTS | Host OS |
-| Container | Docker | 27.x | Containerization |
-| Orchestration | Docker Swarm | Built-in | Service orchestration |
-| Reverse Proxy | NGINX | 1.24 | SSL, Load Balancing |
-| Process Manager | PM2 | 5.3 | Node.js process management |
+Versions are the resolved versions in the lockfiles, not aspirational ones.
 
-### Backend Stack
-| Component | Technology | Version | Purpose |
-|-----------|-----------|---------|---------|
-| Runtime | Node.js | 22 LTS | JavaScript runtime |
-| Framework | Express.js | 4.18 | API framework |
-| ORM | Prisma | 5.7 | Database ORM |
-| Validation | Zod | 3.22 | Schema validation |
-| Queue | BullMQ | 5.1 | Job queue (Redis) |
-| Auth | Supabase Auth | 2.39 | JWT authentication |
+### Runtime and infrastructure
 
-### Frontend Stack
-| Component | Technology | Version | Purpose |
-|-----------|-----------|---------|---------|
-| Framework | Next.js | 14 (App Router) | React framework |
-| Styling | Tailwind CSS | 3.4 | Utility-first CSS |
-| UI Components | shadcn/ui | Latest | Accessible components |
-| Charts | Recharts | 2.10 | Data visualization |
-| State | Zustand | 4.4 | Global state management |
-| Icons | Lucide React | Latest | Icon library |
+| Component | Technology | Version | Role |
+|---|---|---|---|
+| Runtime | Node.js | 22 (`.nvmrc`) | Application runtime |
+| Orchestration | Docker Compose | — | Local and single-host deployment |
+| Reverse proxy | NGINX | — | Optional TLS termination, `nginx/nginx.conf` |
+| Database | PostgreSQL | 16-alpine | Primary datastore |
+| Cache/queue | Redis | 7-alpine | Provisioned; queue integration pending |
 
-### Database & Storage
-| Component | Technology | Purpose |
-|-----------|-----------|---------|
-| Primary DB | PostgreSQL 16 | Relational data |
-| Cache | Redis 7 | Sessions, queues, caching |
-| Search | PostgreSQL FTS | Full-text search |
-| Backups | pg_dump + R2 | Automated backups |
+There is no Docker Swarm, Kubernetes, or Kafka orchestration in this repository. Single-host
+Docker Compose is the supported deployment topology.
 
-### DevOps & Monitoring
-| Component | Technology | Purpose |
-|-----------|-----------|---------|
-| CI/CD | GitHub Actions | Automated testing & deploy |
-| Monitoring | Prometheus + Grafana | Metrics & dashboards |
-| Logging | Winston + Loki | Structured logging |
-| Alerting | Alertmanager | Infrastructure alerts |
+### Backend
 
----
+| Component | Technology | Version | Role |
+|---|---|---|---|
+| Framework | Express | 4.22.2 | HTTP server and routing |
+| ORM | Prisma | 5.22.0 | Query builder and migrations |
+| Validation | Zod | 3.25.76 | Environment and request validation |
+| Auth | `@supabase/supabase-js` | 2.108.0 | Signup, signin, token verification |
+| Security | helmet, cors, express-rate-limit | 7.2.0 / 2.8.6 / 7.5.1 | Hardening and throttling |
+| Logging | morgan, winston | 1.11.0 / 3.19.0 | Request and structured logs |
+| Payments | stripe | 14.25.0 | Checkout, portal, webhooks |
+| Email | resend | 2.1.0 | Alert delivery |
+| Auth hashing | bcryptjs | 2.4.3 | Password hashing helper |
 
-## 3. DATABASE SCHEMA (Prisma)
+### Worker
 
-```prisma
-// Core Entities
-User → Subscription (1:1)
-User → Monitor (1:N)
-User → StatusPage (1:N)
-User → Alert (1:N)
-User → TeamMember (1:N) [Future]
+| Component | Technology | Version | Role |
+|---|---|---|---|
+| Scheduling | node-cron | 3.0.3 | Daily retention sweep |
+| Scheduling | `setInterval` | — | Check cycle |
+| HTTP | axios | 1.17.0 | Outbound probe requests |
+| Alerts | resend | 2.1.0 | Email notification |
 
-Monitor → Check (1:N)
-Monitor → Alert (1:N)
-Monitor → StatusPageItem (1:N)
+### Frontend
 
-StatusPage → StatusPageItem (1:N)
-```
+| Component | Technology | Version | Role |
+|---|---|---|---|
+| Framework | Next.js | 14.2.35 | App Router, React 18 |
+| Styling | Tailwind CSS | 3.4.19 | Utility-first styling |
+| Components | Radix UI primitives | 1.x | Accessible headless components |
+| Charts | Recharts | 2.15.4 | Latency and uptime visualization |
+| Client state | Zustand | 4.5.7 | Client-side state |
+| Icons | lucide-react | 0.294.0 | Icon set |
 
-### Entity Relationships
-- **User**: Central entity. All data scoped to user (multi-tenant via Row Level Security)
-- **Monitor**: HTTP endpoint configuration. Belongs to User.
-- **Check**: Individual health check result. Belongs to Monitor.
-- **Alert**: Notification record. Belongs to User + Monitor.
-- **Subscription**: Stripe billing data. Belongs to User.
-- **StatusPage**: Public-facing status page. Belongs to User.
+### Not present
+
+Prometheus, Grafana, Loki, Alertmanager, PM2, and object storage are **not** part of this
+repository. Health is exposed through `GET /health` and structured Winston logs only.
 
 ---
 
-## 4. API DESIGN (RESTful + Versioned)
+## 3. Data model
+
+Seven models in `backend/prisma/schema.prisma`, with a committed SQL migration at
+`backend/prisma/migrations/20260101000000_init/migration.sql`.
 
 ```
-Base URL: /api/v1
+User (id, email, …)
+  ├─1:N─ Monitor
+  ├─1:N─ Alert
+  ├─1:N─ StatusPage
+  └─1:1─ Subscription
 
-Auth:
-  POST /api/v1/auth/signup
-  POST /api/v1/auth/signin
-  POST /api/v1/auth/signout
-  GET  /api/v1/auth/me
-  POST /api/v1/auth/reset-password
+Monitor (id, userId, url, method, headers, body, interval, timeout,
+         expectedStatus, expectedKeyword, region, isActive, isPaused)
+  ├─1:N─ Check
+  ├─1:N─ Alert
+  └─1:N─ StatusPageItem
 
-Monitors:
-  GET    /api/v1/monitors              (List with stats)
-  POST   /api/v1/monitors              (Create)
-  GET    /api/v1/monitors/:id          (Detail with history)
-  PATCH  /api/v1/monitors/:id          (Update)
-  DELETE /api/v1/monitors/:id          (Delete)
-  GET    /api/v1/monitors/:id/checks   (Check history)
-  POST   /api/v1/monitors/:id/pause    (Pause monitoring)
-  POST   /api/v1/monitors/:id/resume   (Resume monitoring)
-
-Analytics:
-  GET    /api/v1/analytics/overview    (Dashboard overview)
-  GET    /api/v1/analytics/uptime      (Uptime reports)
-  GET    /api/v1/analytics/response-time (Response time trends)
-
-Billing:
-  GET    /api/v1/billing/subscription  (Current plan)
-  POST   /api/v1/billing/checkout      (Stripe checkout)
-  POST   /api/v1/billing/portal        (Billing portal)
-  POST   /api/v1/billing/webhook       (Stripe webhook)
-
-Status Pages (Public):
-  GET    /api/v1/status-pages          (List)
-  POST   /api/v1/status-pages          (Create)
-  GET    /api/v1/status-pages/:slug    (Public status page)
-
-Alerts:
-  GET    /api/v1/alerts                (Alert history)
-  PATCH  /api/v1/alerts/:id/acknowledge (Acknowledge alert)
+Check       (id, monitorId, status, statusCode, responseTime, error, region, checkedAt)
+Alert       (id, monitorId, userId, type, status, message, details, triggeredAt, resolvedAt)
+Subscription(id, userId, stripeCustomerId, stripeSubscriptionId, plan, status, …)
+StatusPage  (id, userId, name, slug, …)
+  └─1:N─ StatusPageItem (statusPageId, monitorId)
 ```
+
+### Tenancy model
+
+Every model is scoped to a single `userId`, and authorization is enforced in the Express
+route handlers by comparing the authenticated user against the record owner.
+
+**Row Level Security is not enabled.** The `supabase/migrations/` files manage the Supabase
+auth schema only and contain no `CREATE POLICY` or `ENABLE ROW LEVEL SECURITY` statements.
+Do not rely on database-level isolation; the application layer is the only enforcement point.
+
+Teams, workspaces, and membership tables do not exist yet. The `team` and `workspaces`
+frontend routes are placeholder pages.
 
 ---
 
-## 5. SECURITY ARCHITECTURE
+## 4. HTTP API
 
-### Authentication Flow
-```
-1. Client → Supabase Auth (email/password or OAuth)
-2. Supabase returns JWT access_token + refresh_token
-3. Client stores tokens (httpOnly cookie preferred)
-4. Client sends Authorization: Bearer <token> with each request
-5. Backend verifies JWT via Supabase auth.getUser(token)
-6. Backend creates/updates local User record
-```
+Base path `/api/v1`. All routes except the public status page and the Stripe webhook require a
+valid Supabase access token as `Authorization: Bearer <token>`.
 
-### Authorization (RBAC)
-```
-Roles:
-  - free: 5 monitors, 5min interval, email alerts only
-  - basic: 20 monitors, 1min interval, status pages
-  - pro: 100 monitors, 30sec interval, all features
-  - admin: Internal admin access (future)
-```
+### Auth — `backend/src/routes/auth.ts`
 
-### Data Protection
-- Row Level Security (RLS) on PostgreSQL
-- API Rate Limiting (100 req/15min per IP, stricter for auth)
-- Input validation via Zod schemas
-- SQL injection prevention via Prisma parameterized queries
-- XSS protection via helmet.js headers
-- CORS configured for specific origins only
+| Method | Path | Auth | Purpose |
+|---|---|---|---|
+| POST | `/auth/signup` | no | Create credentials, provisions local `User` |
+| POST | `/auth/signin` | no | Exchange credentials for tokens |
+| POST | `/auth/signout` | no | Invalidate session |
+| GET | `/auth/me` | yes | Current user profile |
+| POST | `/auth/refresh` | no | Rotate access token |
+| POST | `/auth/reset-password` | no | Send reset email |
+| POST | `/auth/update-password` | no | Complete reset |
 
----
+### Monitors — `backend/src/routes/monitors.ts`
 
-## 6. MONITORING WORKER ARCHITECTURE
+| Method | Path | Purpose |
+|---|---|---|
+| GET | `/monitors` | List with aggregate stats |
+| GET | `/monitors/:id` | Detail with recent checks |
+| POST | `/monitors` | Create |
+| PATCH | `/monitors/:id` | Update |
+| DELETE | `/monitors/:id` | Delete with cascade |
+| POST | `/monitors/:id/pause` | Stop checking |
+| POST | `/monitors/:id/resume` | Resume checking |
+| GET | `/monitors/:id/checks` | Paginated check history |
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    WORKER SERVICE (Port 3002)                │
-│                                                              │
-│  ┌─────────────┐    ┌─────────────┐    ┌─────────────────┐  │
-│  │ Job Scheduler│    │ Job Processor│    │ Alert Dispatcher│  │
-│  │ (node-cron)  │    │ (BullMQ)    │    │ (Resend/Slack)  │  │
-│  │              │    │             │    │                 │  │
-│  │ Every 30s:  │    │ 1. HTTP req │    │ 1. Check status │  │
-│  │ Fetch active │    │ 2. Measure  │    │ 2. If down:     │  │
-│  │ monitors    │    │ 3. Store    │    │    Send email   │  │
-│  │ Create jobs │    │ 4. Queue    │    │ 3. If resolved: │  │
-│  │             │    │    alert    │    │    Send resolve │  │
-│  └─────────────┘    └─────────────┘    └─────────────────┘  │
-│                                                              │
-│  ┌─────────────────────────────────────────────────────────┐│
-│  │              Redis Queue (BullMQ)                       ││
-│  │  • check-queue: Process health checks                   ││
-│  │  • alert-queue: Send notifications                      ││
-│  │  • retry-queue: Failed check retries                    ││
-│  └─────────────────────────────────────────────────────────┘│
-└─────────────────────────────────────────────────────────────┘
-```
+### Analytics — `backend/src/routes/analytics.ts`
 
-### Check Logic
-```
-1. Fetch all active monitors from DB
-2. Group by interval (30s, 60s, 300s)
-3. For each monitor:
-   a. Send HTTP request (respect timeout)
-   b. Measure response time
-   c. Validate status code
-   d. Validate expected keyword (if set)
-   e. Store result in DB
-   f. If status changed (up→down or down→up):
-      - Create Alert record
-      - Queue alert notification
-4. Cleanup old checks (retain 90 days)
-```
+| Method | Path | Purpose |
+|---|---|---|
+| GET | `/analytics/overview` | Dashboard rollup |
+| GET | `/analytics/uptime/:monitorId` | Uptime percentage over a window |
+| GET | `/analytics/response-time/:monitorId` | Latency series |
 
----
+### Alerts — `backend/src/routes/alerts.ts`
 
-## 7. DEPLOYMENT ARCHITECTURE (Ubuntu 24.04)
+| Method | Path | Purpose |
+|---|---|---|
+| GET | `/alerts` | Alert history |
+| GET | `/alerts/stats` | Counts by status |
+| PATCH | `/alerts/:id/acknowledge` | Acknowledge |
 
-### Single Server Setup (MVP)
-```
-Ubuntu 24.04 LTS Server
-├── Docker Engine 27.x
-├── Docker Compose (development)
-├── Docker Swarm (production)
-│   ├── api-monitor-api (replica: 2)
-│   ├── api-monitor-worker (replica: 1)
-│   ├── api-monitor-web (replica: 2)
-│   ├── nginx (load balancer)
-│   ├── postgres (managed or container)
-│   └── redis (cache + queue)
-├── NGINX (host level, SSL termination)
-├── PM2 (fallback process manager)
-└── UFW Firewall
-```
+### Status pages — `backend/src/routes/statusPages.ts`
 
-### Directory Structure on Server
-```
-/opt/api-monitor/
-├── docker/
-│   ├── docker-compose.yml
-│   ├── docker-compose.prod.yml
-│   ├── nginx/
-│   │   ├── nginx.conf
-│   │   └── ssl/
-│   └── scripts/
-│       ├── deploy.sh
-│       ├── backup.sh
-│       └── health-check.sh
-├── releases/
-│   ├── v1.0.0/
-│   ├── v1.0.1/
-│   └── current → v1.0.1
-├── logs/
-│   ├── nginx/
-│   ├── app/
-│   └── worker/
-└── backups/
-    ├── daily/
-    └── weekly/
-```
+| Method | Path | Auth | Purpose |
+|---|---|---|---|
+| GET | `/status-pages` | yes | List own pages |
+| POST | `/status-pages` | yes | Create page |
+| PATCH | `/status-pages/:id` | yes | Update page |
+| DELETE | `/status-pages/:id` | yes | Delete page |
+| GET | `/status-pages/public/:slug` | **no** | Public, unauthenticated read |
+
+The public route is the only intentional unauthenticated data endpoint. The management UI for
+status pages is not built.
+
+### Billing — `backend/src/routes/billing.ts`
+
+| Method | Path | Auth | Purpose |
+|---|---|---|---|
+| GET | `/billing/plans` | no | Plan catalogue |
+| GET | `/billing/subscription` | yes | Current subscription |
+| POST | `/billing/checkout` | yes | Create Stripe Checkout session |
+| POST | `/billing/portal` | yes | Stripe billing portal session |
+| POST | `/billing/webhook` | signature | Stripe events, raw-body verified |
+
+Billing is implemented server-side only. The frontend billing page does not yet complete the
+checkout flow, and entitlements are not enforced on the API — plan limits are advisory.
+
+### Health
+
+`GET /health` returns database and Redis reachability. It is exempt from rate limiting.
 
 ---
 
-## 8. GIT BRANCHING STRATEGY (GitFlow Simplified)
+## 5. Security model
+
+### Authentication flow
 
 ```
-main          ────────────────────────────────────────────────
-              │         │         │         │         │
-              ▼         ▼         ▼         ▼         ▼
-release/v1.0  ●────────●────────●────────●────────●
-              │        /│        /│        /│
-              ▼       / ▼       / ▼       / ▼
-feature/      ●──────●  ●──────●  ●──────●  ●──────●
-  backend     │      │  │      │  │      │  │      │
-              ▼      ▼  ▼      ▼  ▼      ▼  ▼      ▼
-feature/      ●──────●  ●──────●  ●──────●  ●──────●
-  frontend    │      │  │      │  │      │  │      │
-              ▼      ▼  ▼      ▼  ▼      ▼  ▼      ▼
-feature/      ●──────●  ●──────●  ●──────●  ●──────●
-  worker      │      │  │      │  │      │  │      │
-              ▼      ▼  ▼      ▼  ▼      ▼  ▼      ▼
-hotfix/       ●──────●  ●──────●  ●──────●  ●──────●
-              │      │  │      │  │      │  │      │
-              ▼      ▼  ▼      ▼  ▼      ▼  ▼      ▼
-develop       ●─────────────────────────────────────────────
+Browser → POST /api/v1/auth/signin
+        → Supabase Auth verifies credentials
+        → access + refresh tokens returned to client
+        → client sends Authorization: Bearer <access_token>
+        → backend authMiddleware calls Supabase auth.getUser(token)
+        → request proceeds only if the token is valid
 ```
 
-### Branch Rules
-- **main**: Production-ready code only. Tagged releases.
-- **develop**: Integration branch. All features merge here first.
-- **feature/***: Individual feature branches. Created from develop.
-- **release/vX.Y**: Release preparation. Bug fixes only.
-- **hotfix/***: Critical production fixes. Created from main.
+Tokens are issued and validated by Supabase. A local `User` row is provisioned on signup and
+used for data ownership. Passwords never reach application code — `bcryptjs` is retained as a
+dependency for the self-hosted auth work tracked in `ROADMAP.md`.
 
-### Commit Convention
-```
-feat: add user authentication
-fix: resolve monitor timeout issue
-docs: update API documentation
-style: format code with prettier
-refactor: simplify check logic
-test: add monitor unit tests
-chore: update dependencies
-perf: optimize database queries
-```
+### Authorization
+
+Authorization is **owner-scoped, not role-based.** Each handler compares the record's `userId`
+to the authenticated user and returns 404 or 403 on mismatch. There are no roles, permissions,
+or membership tables.
+
+Plan limits (monitor count, check interval) are read from the subscription and applied in the
+monitors route. They are not a security boundary — no entitlement enforcement exists.
+
+### Transport and input hardening
+
+| Control | Implementation |
+|---|---|
+| Security headers | `helmet` with explicit CSP and HSTS configuration |
+| CORS | Explicit origin allowlist, not a wildcard |
+| Rate limiting | Global limiter plus a stricter limiter on `/api` |
+| SQL injection | Prisma parameterizes all queries; no raw SQL in application code |
+| Input validation | Zod schemas on environment and request payloads |
+| Webhook integrity | Stripe signature verified against the raw request body |
+| Secrets | `.env` is gitignored; `.env.example` contains placeholders only |
+| Logging | Winston with redaction; morgan request logging |
+
+### Known gaps
+
+These are real and are tracked in `ROADMAP.md`:
+
+- **SSRF.** Users supply arbitrary URLs that the worker fetches. There is no allowlist, no
+  private-range blocking (`127.0.0.0/8`, `10.0.0.0/8`, `169.254.169.254`), and no DNS
+  rebinding protection. This is the highest-priority security item.
+- **No RBAC.** Single-owner tenancy only.
+- **No audit log.** Security-relevant actions are not recorded.
+- **Row Level Security is not enabled** on PostgreSQL.
+- **Worker state is in-memory.** Last-known status lives in a `Map` and is lost on restart; it
+  is rehydrated from the most recent `Check` rows at boot.
 
 ---
 
-## 9. SCALING ROADMAP
+## 6. Worker and check execution
 
-### Phase 1: MVP (Current)
-- Single server, Docker Compose
-- 1 API instance, 1 Worker instance
-- PostgreSQL container
-- Redis container
-- ~1000 monitors supported
+### Scheduling
 
-### Phase 2: Growth (3-6 months)
-- Docker Swarm multi-node
-- API: 3 replicas, Worker: 2 replicas
-- Managed PostgreSQL (Supabase/RDS)
-- Managed Redis (Upstash/ElastiCache)
-- CDN for static assets
-- ~10000 monitors supported
+```ts
+// worker/src/index.ts
+const intervalSeconds = Math.max(CHECK_INTERVAL, 30);  // floor of 30s
+setInterval(runChecks, intervalSeconds * 1000);
+cron.schedule('0 3 * * *', cleanupOldChecks);          // CLEANUP_DAYS, default 90
+```
 
-### Phase 3: Scale (6-12 months)
-- Kubernetes cluster
-- Regional worker deployments
-- Read replicas for analytics
-- Kafka for event streaming
-- ~100000 monitors supported
+`setInterval` is used rather than cron for the check cycle because sub-minute intervals are
+required and `node-cron` cannot express them portably.
+
+### Check cycle
+
+```
+1. SELECT all Monitor where isActive = true AND isPaused = false
+2. Filter by per-monitor interval using the in-memory last-check timestamp
+3. Process in batches of 10, monitors within a batch in parallel via Promise.all
+4. Per monitor:
+     a. executeCheck(url, method, headers, body, timeout, expectedStatus, expectedKeyword)
+     b. INSERT Check { status, statusCode, responseTime, error, region }
+     c. Diff current status against last known status
+     d. On transition:
+          - INSERT Alert { type: 'email', status: triggered|resolved }
+          - send Resend email to the monitor owner
+          - if recovered, mark sibling triggered alerts resolved with resolvedAt
+5. Log cycle completion
+```
+
+Probe outcomes are `up`, `down`, or `degraded`, where degraded covers slow or partial
+responses. A monitor counts as up when the status code matches `expectedStatus` and, if
+`expectedKeyword` is set, the response body contains that string.
+
+### Graceful shutdown
+
+`SIGTERM` and `SIGINT` both disconnect Prisma and exit 0. In-flight checks are not awaited to
+completion; because results are written per monitor, at most one batch is lost on shutdown.
+
+### Scaling characteristics
+
+This design has known limits worth stating plainly:
+
+- The interval filter is per-process, so **running more than one worker replica causes
+  duplicate checks**. The system is designed for exactly one worker instance.
+- There is no job queue. A probe that hangs is bounded only by its configured `timeout`.
+- No retry, backoff, or dead-letter handling exists. A failed probe is recorded as a failed
+  probe, not retried.
+- `Promise.all` per batch means one slow monitor delays its whole batch up to its timeout.
+
+Redis-backed queues with retry, backoff, dead-letter handling, and multi-replica safety are the
+first item in `ROADMAP.md`.
 
 ---
 
-## 10. DISASTER RECOVERY
+## 7. Deployment
 
-### Backup Strategy
-- **Database**: Daily pg_dump at 2 AM UTC, retain 30 days
-- **Config**: Git repository (infrastructure as code)
-- **Logs**: 90-day retention in object storage
-- **Recovery Time Objective (RTO)**: 1 hour
-- **Recovery Point Objective (RPO)**: 24 hours
+### Local development
 
-### Failover
-- Database: PostgreSQL streaming replication (future)
-- API: Docker Swarm auto-restart + health checks
-- Worker: Multiple instances with job locking (BullMQ)
-- Alerts: Queue-based, survives worker restarts
+```bash
+cp .env.example .env
+docker compose up -d          # postgres, redis, backend, worker, frontend
+npm run db:migrate -w backend
+```
+
+The frontend requires a reachable Supabase project for auth. This is the main obstacle to a
+fully offline `docker compose up`; self-hosted auth is tracked in `ROADMAP.md`.
+
+### Container topology
+
+| Service | Image basis | Port | Notes |
+|---|---|---|---|
+| `postgres` | postgres:16-alpine | 5432 | Named volume `postgres_data` |
+| `redis` | redis:7-alpine | 6379 | Provisioned, not yet consumed |
+| `backend` | `backend/Dockerfile` | 3001 | Depends on postgres, redis |
+| `worker` | `worker/Dockerfile` | 3002 | Depends on postgres, redis |
+| `frontend` | `frontend/Dockerfile` | 3000 | Next.js standalone output |
+
+`docker-compose.prod.yml` and `render.yaml` provide production-oriented variants. NGINX
+configuration for single-host TLS termination is in `nginx/nginx.conf`.
+
+### Operational scripts
+
+| Script | Purpose |
+|---|---|
+| `scripts/setup-ubuntu.sh` | Host preparation |
+| `scripts/deploy.sh` | Pull, build, migrate, restart |
+| `scripts/backup.sh` | `pg_dump` backup |
+| `scripts/validate-env.js` | Fail-fast environment validation |
+| `docker/start-combined.sh` | Local combined startup |
+
+### Backup and recovery
+
+`scripts/backup.sh` performs `pg_dump`. There is no automated restore procedure, no
+point-in-time recovery, and no replication configuration in this repository. Recovery
+objectives are not established.
+
+---
+
+## 8. CI
+
+`.github/workflows/ci.yml` runs on pushes to `main`, `develop`, `release/**`, `feature/**`,
+`hotfix/**`, and on pull requests targeting `main`, `develop`, `release/**`.
+
+| Job | What it verifies |
+|---|---|
+| `backend` | `npm ci`, Prisma generate, migrate against a real postgres:16 service, build, lint, typecheck, test |
+| `frontend` | `npm ci`, Next.js production build, lint, typecheck |
+| `worker` | `npm ci`, build, lint, typecheck |
+| `docker` | Builds all three images with no push |
+| `summary` | Aggregates pass/fail |
+
+`.github/workflows/deploy.yml` handles deployment and `keep-alive.yml` pings the hosted
+demo.
+
+### Test coverage
+
+Two test files exist, both in the backend:
+
+- `backend/src/middleware/error.test.ts`
+- `backend/src/routes/monitors.test.ts`
+
+The worker and frontend have no automated tests. There are no end-to-end tests and no
+benchmark suite. The test command runs with `--passWithNoTests` in CI, so an empty suite
+passes silently. Expanding coverage is a release blocker for any commercial listing.
+
+---
+
+## 9. Repository conventions
+
+### Layout
+
+```
+backend/    Express API, Prisma schema and migrations
+worker/     Monitoring scheduler and probe executor
+frontend/   Next.js dashboard and public status page
+supabase/   Supabase auth schema migrations
+nginx/      Reference reverse proxy config
+scripts/    Setup, deploy, backup, validation
+docs/       Reference documentation
+```
+
+### Branching
+
+`main` is the default branch and carries releases. `develop` is the integration branch.
+Feature work uses `feature/*`, releases use `release/vX.Y`, and urgent fixes use `hotfix/*`.
+Release tags in history: `v1.0.0`, `v1.1.0`, `v1.2.0`, `v2.0.0`, `v2.0.1-stable`, `v3.0.0`,
+`v3.5.0`.
+
+### Commit convention
+
+`feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `chore:`, `perf:`, `build:`, `ci:`.
+
+### Documentation rule
+
+Implemented behavior belongs in this file. Planned behavior belongs in `ROADMAP.md`. The
+`README.md` feature matrix follows the same rule and is the customer-facing view of it.

@@ -10,8 +10,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-cert
 
 WORKDIR /app
 
-# Use npm registry mirror for better connectivity
-RUN npm config set registry https://registry.npmmirror.com || true
+# Registry is overridable at build time for operators behind a mirror or proxy:
+#   docker build --build-arg NPM_REGISTRY=https://registry.example.com .
+# The default is the public npm registry so that builds work for anyone, anywhere.
+ARG NPM_REGISTRY=https://registry.npmjs.org
+ENV NPM_CONFIG_REGISTRY=${NPM_REGISTRY}
 RUN npm config set fetch-retries 5
 RUN npm config set fetch-retry-mintimeout 20000
 RUN npm config set fetch-retry-maxtimeout 120000
