@@ -81,6 +81,14 @@ fetched user-supplied monitor URLs with no destination validation.
 - `backend/src/routes/monitors.test.ts` was testing a *copy* of the Zod schema rather than
   the real one, so it would have kept passing if the actual schema changed. The schemas are
   now exported and imported. Backend coverage is 21 tests, up from 12.
+- Those schemas moved to `backend/src/schemas/monitor.ts`. Pointing the test at the route
+  module fixed the copy problem but broke CI: importing the router pulls in the Prisma
+  client, the Supabase client and `config/env`, and `config/env` calls `process.exit(1)`
+  when its required variables are missing, which is the normal case on a runner. The
+  backend job failed with four `process.exit called with "1"` child-process exceptions while
+  passing locally, where a populated `.env` hides it. A schema module that imports nothing
+  but `zod` is importable in any environment, and the test now runs with no environment at
+  all.
 - The worker has a test suite and tooling for the first time: `worker/jest.config.js`,
   an ESLint flat config, `test`/`test:watch`/`test:cov` scripts, and the corresponding CI
   step. CI still uses `--passWithNoTests` for the frontend, which has no tests; that is

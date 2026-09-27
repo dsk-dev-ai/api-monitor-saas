@@ -1,4 +1,4 @@
-import { createMonitorSchema, updateMonitorSchema } from './monitors';
+import { createMonitorSchema, updateMonitorSchema } from '../schemas/monitor';
 
 describe('Monitor Routes Validation', () => {
   describe('createMonitorSchema', () => {
