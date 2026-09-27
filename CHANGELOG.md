@@ -5,9 +5,95 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/) and this 
 
 ## Unreleased
 
-The Docker development environment had never worked. Six independent defects
-kept `docker compose up` from reaching a usable state — CI passed because it only
-builds images and never runs the stack. All are fixed and verified end to end.
+The highest-priority security defect in the shipped product is fixed: the worker
+fetched user-supplied monitor URLs with no destination validation.
+
+### Security
+- **SSRF in the monitoring worker — fixed.** Users supply monitor URLs and the worker
+  fetches them, with no destination validation. Any user who could create a monitor could
+  point it at `127.0.0.1`, the RFC1918 ranges, the Docker host gateway, or a cloud metadata
+  endpoint such as `169.254.169.254`, then read the outcome back through the monitor's
+  status code and timing. On a cloud host that included instance credentials from the
+  metadata service. Redirects were followed by the HTTP client with no re-validation, and
+  there was no DNS rebinding protection, so a first-hop allowlist alone would not have
+  closed it.
+- Added `worker/src/security/` as a server-side destination policy, and routed the single
+  outbound request path (`services/executor.ts`) through it:
+  - `ip-policy.ts` classifies one resolved address against the IANA special-purpose
+    registries — loopback, private, link-local, CGNAT, multicast, reserved, benchmarking
+    and documentation ranges in both families — and denies anything it cannot classify. The
+    IPv4 embedded in IPv4-mapped, NAT64, 6to4 and Teredo addresses is checked too, so
+    `http://[::ffff:169.254.169.254]/` is refused like its IPv4 equivalent.
+  - Obfuscated hosts are handled by canonicalising with the WHATWG `URL` parser rather than
+    by pattern matching, so `2130706433`, `0x7f000001`, `0177.0.0.1`, `127.1` and
+    percent-encoded or fullwidth digits are all refused.
+  - `ssrf-policy.ts` restricts the scheme to `http`/`https` before any DNS query, rejects
+    embedded credentials, and refuses the target if *any* resolved address is non-public
+    rather than picking the public one.
+  - The classification runs again inside a `lookup` installed on the request's agents, so
+    the address dialled is the address approved. This is what closes the rebinding window:
+    there is no second, unguarded resolution.
+  - The executor sets `maxRedirects: 0`, which puts axios on Node's native transport
+    instead of `follow-redirects`, and walks the chain itself — re-running the full policy on
+    each hop, capped at 5, dropping the body on a method-changing `301`/`302`/`303`.
+  - Refusals return one uniform message, `Monitor target resolves to a restricted network
+    destination.`, so a monitor cannot be used to probe which internal addresses exist. The
+    address and reason go to the worker log only. This replaced an initial approach that let
+    the internal address reach the user through a wrapped client error; see the note below.
+  - Walking redirects by hand removed a protection the old client provided:
+    `follow-redirects` drops `Authorization`, `Proxy-Authorization` and `Cookie` when a
+    redirect crosses to a different host, and a loop that forwards every header re-introduces
+    that leak. All caller headers are now dropped at an origin boundary, which is stricter,
+    because any caller header can be a credential. A `307`/`308` that crosses origins with a
+    request body is refused rather than followed: dropping the body would silently check a
+    request the user did not configure.
+- **Second bug found while writing the tests.** A block raised inside the guarded socket
+  connect could be replaced by the HTTP client's own error, which both masked the refusal
+  and exposed the resolved internal address. The guard now reports through a per-request
+  callback and the executor substitutes the uniform message.
+- Added 134 tests across three suites, wired into `npm test -w worker` and CI:
+  `ssrf-policy.test.ts` (range tables, obfuscation, cloud metadata, split-horizon names,
+  rebinding, scheme smuggling via `Location`, error text), `executor.test.ts` (redirect
+  control flow, method and body handling) and `executor.e2e.test.ts`, which runs the real
+  policy against a real server genuinely listening on loopback and asserts it is never
+  contacted.
+- The suite was mutation-checked rather than assumed sound. Disabling the classification
+  produced 64 failures including a check that reported `status: "up"` after a live
+  loopback connection; ignoring the redirect verdict produced 7 targeted failures and
+  attempts to reach loopback and `169.254.169.254`. Both mutations were reverted.
+- **Security review of the full request path.** Every place this codebase fetches a
+  user-controlled URL was traced, not just the reported one. The worker path was the only
+  gap: the frontend fetches only the configured same-origin API, Resend uses a fixed
+  service host, and the Stripe webhook is inbound. There is no second outbound fetch path
+  in the repository.
+- Residual risk is documented rather than glossed: DNS is still resolved before use, so a
+  hostile hostname can cause an outbound query; a rebind on a redirect hop is argued by
+  construction rather than covered by a test; the range table is a denylist of
+  special-purpose ranges, not an allowlist; and `Host` is not pinned. See
+  [SECURITY.md](SECURITY.md).
+
+### Added
+- The worker has a test suite and tooling for the first time: `worker/jest.config.js`,
+  an ESLint flat config, `test`/`test:watch`/`test:cov` scripts, and the corresponding CI
+  step. CI still uses `--passWithNoTests` for the frontend, which has no tests; that is
+  called out in [ROADMAP.md](ROADMAP.md) rather than left to be discovered.
+- `docs/AUTH_DESIGN.md` and `docs/COMMERCIAL_BOUNDARY.md` from the R1 documentation pass.
+
+### Known gaps left open by this change
+- Monitor response bodies are still read in full to evaluate `expectedKeyword`, so a
+  monitor pointing at a large file can exhaust the worker's heap. The SSRF policy does not
+  address this and it is now tracked as its own P0 in [ROADMAP.md](ROADMAP.md).
+
+## [3.5.0-community] — R1 community baseline
+
+The tag `v3.5.0-community` was initially published on a commit that predated the
+documentation and licensing pass, so the release contained images whose security
+posture could not be traced to the source. The tag has been moved to `774ed99`, the
+verified R1 baseline, with no history rewritten.
+
+The Docker development environment had never worked. Six independent defects kept
+`docker compose up` from reaching a usable state — CI passed because it only builds
+images and never runs the stack. All are fixed and verified end to end.
 
 ### Security
 - **The real `.env` was baked into the backend image.** No `.dockerignore` existed,
@@ -19,10 +105,6 @@ builds images and never runs the stack. All are fixed and verified end to end.
 - Dockerfiles no longer pin `registry.npmmirror.com`, which broke builds outside
   that network. The registry is now a `NPM_REGISTRY` build argument defaulting to
   the public npm registry.
-- Documented the unfixed SSRF exposure in the monitoring worker in
-  [SECURITY.md](SECURITY.md). User-supplied monitor URLs are fetched with no
-  destination validation, so a monitor can be pointed at private ranges or cloud
-  metadata endpoints.
 
 ### Fixed
 - Prisma client was pinned to the `linux-musl` engine in `schema.prisma`, so every

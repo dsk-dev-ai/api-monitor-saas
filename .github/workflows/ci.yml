@@ -126,7 +126,7 @@ jobs:
         run: npm run typecheck -w frontend
 
   worker:
-    name: Worker Build, Lint & Typecheck
+    name: Worker Build, Test, Lint & Typecheck
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -143,6 +143,9 @@ jobs:
 
       - name: Build Worker
         run: npm run build -w worker
+
+      - name: Test
+        run: npm test -w worker
 
       - name: Lint
         run: npm run lint -w worker

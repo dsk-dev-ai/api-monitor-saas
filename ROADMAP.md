@@ -12,55 +12,55 @@ reliability problems that affect the current system.
 
 These are defects or gaps in shipped code, not feature requests.
 
-### SSRF protection in the monitoring worker
+### ~~SSRF protection in the monitoring worker~~ — done
 
-**Status:** not implemented · **Severity:** high
+**Status:** implemented · 134 tests, mutation-verified
 
-Users supply arbitrary URLs that the worker fetches on their behalf. There is no destination
-validation, so a monitor can be pointed at `127.0.0.1`, the `10.0.0.0/8` and `172.16.0.0/12`
-private ranges, the Docker host gateway, or cloud metadata endpoints such as
-`169.254.169.254`. A user can use the worker as a proxy to probe internal infrastructure.
+Users supplied arbitrary URLs that the worker fetched on their behalf with no destination
+validation, so a monitor could be pointed at `127.0.0.1`, the RFC1918 ranges, the Docker host
+gateway, or `169.254.169.254`, and the result read back through the monitor's status code.
 
-Required:
+Shipped in `worker/src/security/`:
 
-- Resolve the hostname and reject private, loopback, link-local, and reserved ranges
-- Re-check the resolved address at connect time to block DNS rebinding
-- Enforce an allow/deny list for operators
-- Restrict redirect following, or re-validate every redirect hop
-- Cap response body size to prevent memory exhaustion
+- `ip-policy.ts` classifies one resolved address against the IANA special-purpose registries,
+  including the IPv4 embedded in v4-mapped, NAT64, 6to4 and Teredo IPv6 forms. Unknown input
+  is denied.
+- `ssrf-policy.ts` parses the URL, restricts the scheme to `http`/`https`, rejects embedded
+  credentials, resolves the name, and refuses the target if *any* resolved address is
+  non-public.
+- A `lookup` installed on the request agent re-classifies at connect time, so the address
+  dialled is the address approved. This is what closes the DNS rebinding window.
+- The executor sets `maxRedirects: 0` (native transport, not `follow-redirects`) and walks
+  redirects itself, re-running the full policy per hop, capped at 5.
+- Refusals return one uniform message; the address and reason go to the log only.
 
-### Test suite is effectively empty
+`executor.e2e.test.ts` runs the real policy against a real listening loopback server and
+asserts it is never contacted. Disabling the guard was verified to fail the suite.
 
-**Status:** 2 test files, 178 lines · **Severity:** high
+Residual risk is documented in [SECURITY.md](SECURITY.md): DNS is still resolved before use,
+a rebind on a redirect hop is argued rather than tested, the range table is a denylist, and
+`Host` is not pinned. Response body size is **still uncapped** — that is the one item from
+the original list not addressed here, and it is listed below.
 
-The worker and frontend have no tests and CI runs with `--passWithNoTests`, so a fully broken
-suite still reports green. Required: unit coverage for `executeCheck` and the alert
-state machine, integration coverage for the monitor and billing routes against real
-postgres and Redis, and an end-to-end path covering signup through incident to alert.
-
-### Multi-replica worker causes duplicate checks
-
-**Status:** by design limitation · **Severity:** medium
-
-Last-check timestamps live in a per-process `Map`, so the interval filter has no cross-process
-view. Two worker replicas issue duplicate probes and duplicate alerts. The system is
-correct only at exactly one worker instance, and nothing enforces that. Scaling horizontally
-requires moving scheduling state into Redis.
-
-### Status transitions lost on worker restart
-
-**Status:** partial mitigation · **Severity:** medium
-
-Status history is rehydrated from the most recent `Check` per monitor at boot, which is the
-right idea but uses `findMany` with `distinct` and no `orderBy` guarantee per group. A monitor
-that went down and recovered entirely within the restart window produces no alert.
-
-### Row Level Security not enabled
+### Cap monitor response body size
 
 **Status:** not implemented · **Severity:** medium
 
-All tenancy enforcement is in application code. A single query bug in a route handler exposes
-cross-tenant data. Enabling RLS would make the database the backstop.
+`executeCheck` reads the whole response into memory to check `expectedKeyword`. A monitor
+pointing at a large file can exhaust the worker's heap. The SSRF policy does not address
+this. Required: a `maxContentLength` on the request and a bounded read of the body.
+
+### Test suite is effectively empty — partially addressed
+
+**Status:** backend 12 tests, worker 134 · **Severity:** high
+
+The worker had no tests and CI runs with `--passWithNoTests`, so a fully broken suite still
+reported green. The worker now has a jest setup and 134 tests covering the SSRF policy,
+redirect handling, and the executor's check semantics, run in CI.
+
+Still missing: the frontend has no tests, and the alert state machine, the billing routes,
+and the signup-to-alert path have no integration coverage. `--passWithNoTests` should be
+removed once every workspace has a suite.
 
 ---
 

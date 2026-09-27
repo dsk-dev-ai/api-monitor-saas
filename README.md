@@ -149,10 +149,16 @@ The **worker** is the engine: it loads active monitors on an interval, runs HTTP
 Two are worth knowing before you deploy this. Both are tracked in
 [ROADMAP.md](ROADMAP.md).
 
-- **SSRF in the monitoring worker (P0, unfixed).** Monitor URLs are user-supplied
-  and fetched with no destination validation, so a monitor can be pointed at
-  private network ranges or a cloud metadata endpoint. Do not expose the API to
-  untrusted users until this is fixed. Details in [SECURITY.md](SECURITY.md).
+- **SSRF residual risk.** The worker enforces a server-side destination policy —
+  scheme allowlist, resolved-address classification, and a guard installed on the
+  socket so the address dialled is the address approved — and it re-validates every
+  redirect hop. 134 tests cover it, including a real listener on loopback that must
+  never be reached. Four residual risks remain (DNS is still resolved before use, the
+  range table is a denylist, a rebind on a redirect hop is argued rather than tested,
+  `Host` is not pinned). Read them in [SECURITY.md](SECURITY.md) before exposing the
+  product to untrusted users.
+- **Response bodies are uncapped.** A monitor pointing at a large file can exhaust the
+  worker's heap.
 - **The worker cannot run more than one replica.** Scheduling state lives in
   process memory, so a second worker issues duplicate probes and duplicate alerts.
   The Redis-backed queue that fixes this is not implemented yet.
@@ -180,21 +186,25 @@ curl -s localhost:3001/health     # expect "status":"healthy"
 npm run build
 npm run lint
 npm run typecheck
-npm test
-node scripts/audit-licenses.js    # regenerate the license inventory
+npm test              # backend: 12 tests
+npm test -w worker    # worker: 134 tests
+npm run licenses      # regenerate the license inventory
 ```
 
-Coverage is currently thin: two backend test files, 12 tests, covering monitor
-routes and the error middleware. The worker and frontend have no automated tests,
-and CI runs with `--passWithNoTests`, so an empty suite would still pass. Treat
-this as a known gap rather than a sign of health.
+Coverage is uneven. The worker suite is substantial and security-critical: it covers the
+SSRF destination policy, redirect handling, and the executor's check semantics, and it
+was mutation-checked — disabling the destination guard makes it fail. The backend has only
+12 tests, covering monitor route validation and the error middleware. The frontend has
+none, and CI still runs with `--passWithNoTests`, so an empty suite would pass. Treat the
+frontend and backend as untested rather than healthy.
 
 ## Roadmap
 
 - [x] v1.0 — MVP: monitoring, alerts, billing
 - [x] v2.0 — Auth, dashboard, monitor management, analytics, alert system, worker service
 - [x] v3.0 — Professionalization: accurate claims/docs, community files, web fixes
-- [ ] P0 — SSRF protection, real test coverage
+- [x] P0 — SSRF destination policy, redirect re-validation, DNS rebinding guard
+- [ ] P0 — cap monitor response body size
 - [ ] P1 — Redis job queue: retries, backoff, dead-letter, safe horizontal scaling
 - [ ] P2 — Self-hosted authentication, removing the Supabase dependency
 - [ ] P3 — Workspaces, RBAC, audit log

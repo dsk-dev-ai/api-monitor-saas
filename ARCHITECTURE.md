@@ -283,14 +283,46 @@ monitors route. They are not a security boundary — no entitlement enforcement 
 | Secrets | `.env` is gitignored; `.env.example` contains placeholders only |
 | Logging | Winston with redaction; morgan request logging |
 
-### Known gaps
+#### Outbound request policy
+
+The worker is the only component that fetches user-supplied URLs, and it does so through a
+single path: `services/executor.ts` → `security/ssrf-policy.ts`. There is no second fetch
+path in the repository.
+
+| Module | Responsibility |
+|---|---|
+| `security/ip-policy.ts` | Classify one resolved address against the IANA special-purpose registries. Pure — no DNS, no HTTP |
+| `security/ssrf-policy.ts` | Parse the URL, enforce the `http`/`https` allowlist, reject embedded credentials, resolve the name, and supply the connect-time guard |
+| `services/executor.ts` | Perform the request with `maxRedirects: 0` and walk redirects itself, re-validating every hop |
+
+Two details are load-bearing:
+
+**The guard lives on the socket, not in front of it.** `maxRedirects: 0` selects Node's
+native `http`/`https` transport instead of `follow-redirects`, and the agents carry a custom
+`lookup` that classifies the address it is about to return. The address validated is therefore
+the address dialled, so a name cannot answer `93.184.216.34` for the check and `127.0.0.1` for
+the connection.
+
+**Refusals do not trust the error object.** A block raised inside a socket connect can be
+replaced by the HTTP client, which would both mask the refusal and let the internal address
+reach the user. The guard reports the refusal through a per-request callback instead, and the
+executor substitutes one uniform message: `Monitor target resolves to a restricted network
+destination.`
+
+Covered by 134 tests in `worker/src`; see `SECURITY.md` for the range tables, the redirect
+policy, and the residual risks.
+
+## Known gaps
 
 These are real and are tracked in `ROADMAP.md`:
 
-- **SSRF.** Users supply arbitrary URLs that the worker fetches. There is no allowlist, no
-  private-range blocking (`127.0.0.0/8`, `10.0.0.0/8`, `169.254.169.254`), and no DNS
-  rebinding protection. This is the highest-priority security item.
 - **No RBAC.** Single-owner tenancy only.
+- **Response bodies are uncapped.** `executeCheck` buffers the whole body to evaluate
+  `expectedKeyword`, so a large response can exhaust the worker's heap. Tracked in
+  `ROADMAP.md`.
+- **SSRF residual risk.** The destination policy is in place and covered by tests, but DNS
+  is still resolved before use, the range table is a denylist rather than an allowlist, and
+  a rebind on a redirect hop is argued rather than tested. See `SECURITY.md`.
 - **No audit log.** Security-relevant actions are not recorded.
 - **Row Level Security is not enabled** on PostgreSQL.
 - **Worker state is in-memory.** Last-known status lives in a `Map` and is lost on restart; it

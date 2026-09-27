@@ -6,14 +6,14 @@ Inventory of every direct dependency in the API Monitor SaaS community edition.
 
 | License | Packages | Commercial restriction |
 |---|---|---|
-| MIT | 65 | None. Attribution notice required. |
+| MIT | 66 | None. Attribution notice required. |
 | Apache-2.0 | 4 | None. Attribution + NOTICE + patent grant required. |
 | BSD-2-Clause | 1 | None. Attribution notice required. |
 | ISC | 2 | None. Attribution notice required. |
 | **Copyleft (GPL/AGPL/LGPL/MPL/CDDL/EPL)** | **0** | **None present.** |
 | **Unknown / source-available** | **0** | **None present.** |
 
-**72 direct dependencies across 3 workspaces. No copyleft
+**73 direct dependencies across 3 workspaces. No copyleft
 (GPL, AGPL, LGPL, MPL, CDDL, EPL) and no source-available (SSPL, BUSL, Elastic) license is
 present.** The dependency set imposes no restriction on redistribution, sublicensing, or
 commercial use of a derivative work.
@@ -118,6 +118,7 @@ licenses below no matter how the surrounding application is licensed.
 | `express` | 4.22.2 | MIT | backend | prod |
 | `express-rate-limit` | 7.5.1 | MIT | backend | prod |
 | `framer-motion` | 12.40.0 | MIT | frontend | prod |
+| `globals` | 15.15.0 | MIT | worker | dev |
 | `helmet` | 7.2.0 | MIT | backend | prod |
 | `ioredis` | 5.11.1 | MIT | worker | prod |
 | `jest` | 29.7.0 | MIT | backend | dev |
