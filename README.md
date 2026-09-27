@@ -152,7 +152,7 @@ Two are worth knowing before you deploy this. Both are tracked in
 - **SSRF residual risk.** The worker enforces a server-side destination policy —
   scheme allowlist, resolved-address classification, and a guard installed on the
   socket so the address dialled is the address approved — and it re-validates every
-  redirect hop. 137 tests cover it, including a real listener on loopback that must
+  redirect hop. 149 tests cover it, including a real listener on loopback that must
   never be reached. Four residual risks remain (DNS is still resolved before use, the
   range table is a denylist, a rebind on a redirect hop is argued rather than tested,
   `Host` is not pinned). Read them in [SECURITY.md](SECURITY.md) before exposing the
@@ -187,7 +187,7 @@ npm run build
 npm run lint
 npm run typecheck
 npm test              # backend: 21 tests
-npm test -w worker    # worker: 137 tests
+npm test -w worker    # worker: 149 tests
 npm run licenses      # regenerate the license inventory
 ```
 

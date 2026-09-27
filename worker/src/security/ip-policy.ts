@@ -60,30 +60,42 @@ const BLOCKED_IPV4: readonly Cidr[] = [
 const BLOCKED_IPV6: readonly Cidr[] = [
   { cidr: '::/128', reason: 'unspecified' },
   { cidr: '::1/128', reason: 'loopback' },
-  { cidr: '::ffff:0:0/96', reason: 'ipv4-mapped' },
-  { cidr: '64:ff9b::/96', reason: 'nat64' },
   { cidr: '64:ff9b:1::/48', reason: 'nat64-local' },
   { cidr: '100::/64', reason: 'discard-only' },
-  { cidr: '2001::/32', reason: 'teredo' },
   { cidr: '2001:2::/48', reason: 'benchmarking' },
   { cidr: '2001:10::/28', reason: 'orchid' },
   { cidr: '2001:20::/28', reason: 'orchid' },
   { cidr: '2001:db8::/32', reason: 'documentation' },
-  { cidr: '2002::/16', reason: '6to4' },
   { cidr: '3fff::/20', reason: 'documentation' },
   { cidr: 'fc00::/7', reason: 'unique-local' },
   { cidr: 'fe80::/10', reason: 'link-local' },
   { cidr: 'ff00::/8', reason: 'multicast' },
 ];
 
-/** Reasons whose range carries a full IPv4 address in its low-order bits. */
-const IPV4_EMBEDDING_REASONS = new Set<BlockReason>([
-  'ipv4-mapped',
-  'nat64',
-  'nat64-local',
-  'teredo',
-  '6to4',
-]);
+/**
+ * Prefixes that carry a full IPv4 address in their low-order bits, and therefore are
+ * *not* blocked on the strength of the prefix alone.
+ *
+ * Blocking these unconditionally looks safer and is in fact wrong. A NAT64 or v4-mapped
+ * address whose embedded IPv4 is a normal public address is a normal public address,
+ * reached through a translation mechanism. Refusing every one of them breaks real
+ * deployments: a DNS64/NAT64 resolver is what Docker hands a container on an IPv6-only or
+ * NAT64-configured host, so this policy refused *every* hostname it resolved, including
+ * well-known public ones, before it ever looked at the embedded address.
+ *
+ * The question these prefixes actually raise is "which IPv4 does this reach", so that is
+ * what gets classified, against the IPv4 table.
+ *
+ * `64:ff9b:1::/48` is deliberately absent: RFC 8215 reserves it for local-use
+ * translation, where the embedded address is not the destination the translator will
+ * actually reach. It stays in the unconditional table above.
+ */
+const IPV4_EMBEDDING_RANGES: readonly Cidr[] = [
+  { cidr: '::ffff:0:0/96', reason: 'ipv4-mapped' },
+  { cidr: '64:ff9b::/96', reason: 'nat64' },
+  { cidr: '2001::/32', reason: 'teredo' },
+  { cidr: '2002::/16', reason: '6to4' },
+];
 
 export type BlockReason =
   | 'this-network'
@@ -216,6 +228,10 @@ function matchesCidr(
 
 const PARSED_IPV4 = BLOCKED_IPV4.map((r) => ({ ...parseCidr(r.cidr, 4), reason: r.reason }));
 const PARSED_IPV6 = BLOCKED_IPV6.map((r) => ({ ...parseCidr(r.cidr, 16), reason: r.reason }));
+const PARSED_EMBEDDING = IPV4_EMBEDDING_RANGES.map((r) => ({
+  ...parseCidr(r.cidr, 16),
+  reason: r.reason,
+}));
 
 /**
  * Pull the IPv4 address embedded in a transition or translation address, if any.
@@ -226,13 +242,13 @@ const PARSED_IPV6 = BLOCKED_IPV6.map((r) => ({ ...parseCidr(r.cidr, 16), reason:
  * checked against the IPv4 policy so `::ffff:169.254.169.254` cannot reach the
  * metadata service through a v6 socket.
  *
- * The ranges are matched by `reason` rather than by position so that reordering or
- * extending the table above cannot silently change which prefix is consulted.
+ * Consulted against `IPV4_EMBEDDING_RANGES`, not the unconditional table, so that a
+ * public address reached through a translation prefix is judged on the IPv4 it carries.
  */
 function extractEmbeddedIPv4(bytes: Uint8Array): number | null {
   let matched: { reason: BlockReason; range: { bytes: Uint8Array; prefix: number } } | null = null;
-  for (const range of PARSED_IPV6) {
-    if (IPV4_EMBEDDING_REASONS.has(range.reason as BlockReason) && matchesCidr(bytes, range)) {
+  for (const range of PARSED_EMBEDDING) {
+    if (matchesCidr(bytes, range)) {
       matched = { reason: range.reason as BlockReason, range };
       break;
     }
@@ -298,17 +314,21 @@ export function classifyAddress(address: string): AddressClassification {
     return { allowed: false, reason: 'not-an-ip-address', family: 0 };
   }
 
-  for (const range of PARSED_IPV6) {
-    if (matchesCidr(asV6, range)) {
-      return { allowed: false, reason: range.reason as BlockReason, family: 6 };
-    }
-  }
-
+  // Order matters. An address in an embedding prefix is judged by the IPv4 it carries,
+  // so a NAT64 or v4-mapped address pointing at a public host stays usable instead of
+  // being refused for the shape of its prefix. Only when it is not an embedding address
+  // does the unconditional table apply.
   const embedded = extractEmbeddedIPv4(asV6);
   if (embedded !== null) {
     const reason = classifyIPv4(embedded);
-    if (reason !== null) {
-      return { allowed: false, reason, family: 6 };
+    return reason === null
+      ? { allowed: true, address: trimmed, family: 6 }
+      : { allowed: false, reason, family: 6 };
+  }
+
+  for (const range of PARSED_IPV6) {
+    if (matchesCidr(asV6, range)) {
+      return { allowed: false, reason: range.reason as BlockReason, family: 6 };
     }
   }
 

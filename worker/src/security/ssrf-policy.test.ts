@@ -14,6 +14,7 @@ import {
   createGuardedLookup,
   SsrfBlockedError,
 } from './ssrf-policy';
+import { classifyAddress, isBlockedAddress } from './ip-policy';
 
 interface LookupEntry {
   address: string;
@@ -34,6 +35,30 @@ function mockPublic() {
 
 const PUBLIC_MESSAGE =
   'Monitor target resolves to a restricted network destination.';
+
+describe('translation prefixes are judged by the address they embed', () => {
+  it.each([
+    ['64:ff9b::42f1:7de8', 'NAT64 embedding 66.241.125.232', 'a NAT64 host on a DNS64 resolver'],
+    ['::ffff:5db8:d822', 'v4-mapped 93.184.216.34', 'a v4-mapped public address'],
+    ['2002:5db8:d822::', '6to4 embedding 93.184.216.34', 'a 6to4 public address'],
+  ])('allows %s (%s) — %s', (candidate) => {
+    // Regression: this policy previously refused the whole prefix, which made every
+    // hostname resolved by a NAT64/DNS64 resolver unreachable, including public ones.
+    expect(classifyAddress(candidate).allowed).toBe(true);
+  });
+
+  it.each([
+    ['64:ff9b::7f00:1', 'loopback'],
+    ['64:ff9b::a9fe:a9fe', 'link-local'],
+    ['::ffff:127.0.0.1', 'loopback'],
+  ])('refuses %s because the embedded address is %s', (candidate, reason) => {
+    const verdict = classifyAddress(candidate);
+    expect(verdict.allowed).toBe(false);
+    // `strictNullChecks` is off in this workspace, so the discriminant does not narrow
+    // the union on its own; the module exports a guard for exactly that.
+    if (isBlockedAddress(verdict)) expect(verdict.reason).toBe(reason);
+  });
+});
 
 describe('validateMonitorTarget — URL parsing and scheme policy', () => {
   afterEach(() => jest.restoreAllMocks());
@@ -211,6 +236,15 @@ describe('validateMonitorTarget — obfuscated literals', () => {
     ['http://0/', 'decimal 0'],
     ['http://[::ffff:7f00:1]/', 'hex IPv4-mapped loopback'],
     ['http://[::ffff:a9fe:a9fe]/', 'IPv4-mapped link-local'],
+    // The translation prefixes are judged by the IPv4 they carry, so a public address
+    // behind one of them must not be refused. Refusing these broke every hostname on a
+    // DNS64/NAT64 network, which is what a container gets on an IPv6-only host.
+    ['http://[64:ff9b::7f00:1]/', 'NAT64 embedding loopback'],
+    ['http://[64:ff9b::a9fe:a9fe]/', 'NAT64 embedding link-local'],
+    ['http://[64:ff9b::a00:1]/', 'NAT64 embedding a private address'],
+    ['http://[2002:7f00:1::]/', '6to4 embedding loopback'],
+    ['http://[2001::7f00:1]/', 'Teredo server field is loopback'],
+    ['http://[64:ff9b:1::1]/', 'local-use NAT64 is refused outright'],
   ])('blocks %s (%s)', async (candidate) => {
     mockPublic();
     const result = await validateMonitorTarget(candidate);

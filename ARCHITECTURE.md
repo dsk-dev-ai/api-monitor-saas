@@ -291,7 +291,7 @@ path in the repository.
 
 | Module | Responsibility |
 |---|---|
-| `security/ip-policy.ts` | Classify one resolved address against the IANA special-purpose registries. Pure — no DNS, no HTTP |
+| `security/ip-policy.ts` | Classify one resolved address against the IANA special-purpose registries. Pure — no DNS, no HTTP. IPv4-embedding prefixes (v4-mapped, NAT64, 6to4, Teredo) are judged by the address they carry, not blocked wholesale |
 | `security/ssrf-policy.ts` | Parse the URL, enforce the `http`/`https` allowlist, reject embedded credentials, resolve the name, and supply the connect-time guard |
 | `services/executor.ts` | Perform the request with `maxRedirects: 0` and walk redirects itself, re-validating every hop |
 
@@ -309,7 +309,7 @@ reach the user. The guard reports the refusal through a per-request callback ins
 executor substitutes one uniform message: `Monitor target resolves to a restricted network
 destination.`
 
-Covered by 137 tests in `worker/src`; see `SECURITY.md` for the range tables, the redirect
+Covered by 149 tests in `worker/src`; see `SECURITY.md` for the range tables, the redirect
 policy, and the residual risks.
 
 ## Known gaps

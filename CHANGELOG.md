@@ -51,7 +51,7 @@ fetched user-supplied monitor URLs with no destination validation.
   connect could be replaced by the HTTP client's own error, which both masked the refusal
   and exposed the resolved internal address. The guard now reports through a per-request
   callback and the executor substitutes the uniform message.
-- Added 137 tests across three suites, wired into `npm test -w worker` and CI:
+- Added 149 tests across three suites, wired into `npm test -w worker` and CI:
   `ssrf-policy.test.ts` (range tables, obfuscation, cloud metadata, split-horizon names,
   rebinding, scheme smuggling via `Location`, error text), `executor.test.ts` (redirect
   control flow, method and body handling) and `executor.e2e.test.ts`, which runs the real
@@ -88,6 +88,18 @@ fetched user-supplied monitor URLs with no destination validation.
 - `docs/AUTH_DESIGN.md` and `docs/COMMERCIAL_BOUNDARY.md` from the R1 documentation pass.
 
 ### Fixed
+- **The policy refused legitimate public hosts on a NAT64 network.** Found by running it
+  against a real public host in the running container, not by reading it. The
+  IPv4-embedding prefixes — v4-mapped, NAT64, 6to4, Teredo — were blocked outright, so
+  every name resolved by a DNS64/NAT64 resolver was refused, including ordinary public
+  ones. A container on an IPv6-only or NAT64-configured host gets exactly such a resolver,
+  which made the worker unable to monitor anything. Those four prefixes are now judged by
+  the IPv4 address they embed, against the IPv4 table: `::ffff:169.254.169.254` is still
+  refused, and `64:ff9b::42f1:7de8`, which embeds the public `66.241.125.232`, is now
+  allowed. `64:ff9b:1::/48` stays refused outright because RFC 8215 local-use translation
+  does not have a well-defined destination. This also made `extractEmbeddedIPv4`, which
+  existed to do this check, reachable code for the first time — it had been dead, shadowed
+  by the range loop that ran before it.
 - A failed check could report `error: ""`, which tells an operator nothing and cannot be
   distinguished from a monitor that was never scheduled. Observed on a live check against a
   public host in the running container; the client error in that case carried no message.

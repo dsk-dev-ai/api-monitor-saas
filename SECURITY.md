@@ -76,26 +76,42 @@ routable. Blocked IPv4 ranges:
 | `224.0.0.0/4` | multicast |
 | `240.0.0.0/4` | reserved, includes broadcast `255.255.255.255` |
 
-Blocked IPv6 ranges:
+Blocked IPv6 ranges, on the strength of the range alone:
 
 | Range | Why |
 |---|---|
 | `::/128`, `::1/128` | unspecified, loopback |
-| `::ffff:0:0/96` | IPv4-mapped — the embedded IPv4 is checked too |
-| `64:ff9b::/96`, `64:ff9b:1::/48` | NAT64 — embedded IPv4 checked |
+| `64:ff9b:1::/48` | NAT64 local-use; the translation is not well defined, so it is refused outright |
 | `100::/64` | discard-only |
-| `2001::/32` | Teredo — embedded IPv4 checked |
 | `2001:2::/48` | benchmarking |
 | `2001:10::/28`, `2001:20::/28` | ORCHID |
 | `2001:db8::/32`, `3fff::/20` | documentation |
-| `2002::/16` | 6to4 — embedded IPv4 checked |
 | `fc00::/7` | unique-local; includes AWS IPv6 metadata `fd00:ec2::254` |
 | `fe80::/10` | link-local |
 | `ff00::/8` | multicast |
 
-The "embedded IPv4 checked" rows matter: `http://[::ffff:169.254.169.254]/`
-reaches the metadata service through a v6 socket, so the v4 address carried in the
-low bits is classified against the v4 table as well.
+Four further prefixes are **not** blocked on the strength of the prefix, because
+they carry a full IPv4 address that can be classified on its own:
+
+| Prefix | Embedded IPv4 | Judged as |
+|---|---|---|
+| `::ffff:0:0/96` | last 32 bits | IPv4-mapped |
+| `64:ff9b::/96` | last 32 bits | NAT64 |
+| `2001::/32` | bytes 4-7, with the client field un-complemented | Teredo |
+| `2002::/16` | bytes 2-5 | 6to4 |
+
+For these, the question is not "is this prefix special" but "which IPv4 does it
+reach", so the embedded address is classified against the IPv4 table above.
+`http://[::ffff:169.254.169.254]/` reaches the metadata service through a v6
+socket and is refused; `64:ff9b::42f1:7de8` embeds the ordinary public address
+`66.241.125.232` and is allowed.
+
+This distinction was found by running the policy, not by reading it. An earlier
+version refused these four prefixes outright, which looks stricter and is wrong: a
+DNS64/NAT64 resolver is what a container gets on an IPv6-only host, so the policy
+refused *every* hostname it resolved, including public ones. Refusing a prefix
+whose payload is checked elsewhere is only safe if you never intend to allow
+anything in it.
 
 ### Obfuscated representations
 
@@ -175,7 +191,7 @@ error shapes for this and neither was used: this is not an API response, it is t
 ### Testing coverage
 
 `worker/src/security/ssrf-policy.test.ts`, `worker/src/services/executor.test.ts`
-and `worker/src/services/executor.e2e.test.ts` — 137 tests, run with
+and `worker/src/services/executor.e2e.test.ts` — 149 tests, run with
 `npm test -w worker`. They cover every range in the tables above, the obfuscated
 encodings, the cloud metadata addresses, split-horizon names, DNS rebinding, every
 redirect case in the list, scheme smuggling via `Location`, and the error text.
