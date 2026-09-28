@@ -153,7 +153,7 @@ attempt. On `303`, and on `301`/`302` for anything but `HEAD`, the follow-up
 becomes a `GET` and the request body is dropped, so a `POST` body is not re-sent to
 a different origin.
 
-### Error behaviour
+## SSRF error behaviour
 
 A refused target returns:
 
@@ -201,6 +201,94 @@ genuinely listening on loopback, and asserts the server never received a request
 Removing the guard was verified to fail these tests — with the guard disabled the
 check returns `status: "up"` after a successful connection to the live server.
 
+## Response body size limit
+
+### What it bounds
+
+A monitored response body is capped at **1 MiB (1,048,576 bytes)** by default,
+overridable with `MAX_RESPONSE_BYTES` and clamped to a hard ceiling of **64 MiB**.
+
+The number is sized from what the product does with a body. The worker reads one only
+to match the monitor's `expectedKeyword`; it never stores or returns a body. A status
+check and a small marker string in a JSON or HTML response is kilobytes, so 1 MiB is
+a wide margin over any realistic endpoint while putting a ceiling on what one check can
+cost. Raising it to a large value to accommodate one monitor would be choosing the
+number to avoid failures rather than to bound the resource.
+
+**A limit that can be configured without bound is not a limit**, so a configured value
+above 64 MiB is clamped rather than honoured. Otherwise `MAX_RESPONSE_BYTES` would be a
+documented way to switch the protection off, recorded only in an environment variable
+nobody reads. Anyone who needs to watch a payload that large wants a different tool.
+
+### How it is enforced
+
+Enforced while the response is consumed, not measured afterwards:
+
+```
+validate destination → request → Content-Length fast path → bounded read → verdict
+```
+
+* The response is requested with `responseType: 'stream'`. The client's default
+  collects the entire body into `response.data` *before the promise settles*, which
+  hands the choice of how much memory the worker uses to the target. Streaming moves
+  that decision into the executor.
+* **Before reading:** an honest `Content-Length` above the limit aborts the transfer
+  from the header alone, without buffering.
+* **While reading:** a running byte count is checked on every chunk. The chunk that
+  crosses the limit is never collected, the stream is destroyed, and the check fails.
+  Peak memory for one check is the limit plus the one chunk that crossed it.
+* `Content-Length` is only a fast path. It is a header from an untrusted party: a
+  target that will send a huge body will omit it, and a chunked response carries none
+  at all. Both are protected by the running count, and both are tested.
+
+### Compressed responses
+
+`decompress: true` is set explicitly, so the stream that is counted is the
+**post-inflation** byte stream — the bytes that would actually occupy memory.
+
+This ordering is the whole point. A 4 KiB gzip body that expands to 400 MiB carries
+`Content-Length: 4096`, so the fast path sees a perfectly reasonable response and
+**only** the running count catches it. The consequence, stated plainly: `Content-Length`
+is therefore checked *before* decompression and is the *compressed* size, so it can
+only ever be an early-out for a plain body. It is never the bound. gzip, deflate and
+Brotli are each tested with a payload that is far under the limit on the wire and far
+over it inflated.
+
+### Redirects and timeouts
+
+A redirect's body is never inspected — only its `Location` — so it is destroyed before
+the next hop rather than read and dropped. A chain therefore cannot accumulate a body
+per hop, and a host answering a 302 with a large payload costs nothing.
+
+The existing deadline is unchanged and covers the whole attempt, redirects included.
+It tears down an in-progress body read; a response that drips forever fails on the
+deadline and a response that overruns the limit fails on the limit, and a check cannot
+outlive either.
+
+### When a monitor exceeds it
+
+The check is recorded as `down` with exactly:
+
+```
+Response body exceeded the configured size limit.
+```
+
+Fixed text. It does not vary with the byte count, the target or the response contents,
+because the monitor's owner supplied the target and is untrusted: a message built from
+response data would be an oracle, and one naming the target would leak the address the
+SSRF policy above goes to such lengths to hide. The limit, the received byte count and
+the declared length go to the worker log. No part of the body is retained or returned.
+
+### What the limit does *not* do
+
+* It does not apply to a response that cannot have a body. A `HEAD` request returns the
+  `Content-Length` its matching `GET` would have sent, and 204/304 have none; reporting
+  a size failure there would break a working monitor that read zero bytes. An empty
+  body simply cannot match a keyword, which is reported as a missing keyword.
+* It does not bound time-to-first-byte, total transfer duration, or the *compressed*
+  bytes in flight. Those are bounded by the existing timeouts.
+* It does not limit the request body the worker sends, only what it reads back.
+
 ## Known security limitations
 
 Disclosed rather than hidden. These are unrelated to SSRF and are all still open.
@@ -242,7 +330,8 @@ changed this, and when" after the fact. Tracked in [ROADMAP.md](ROADMAP.md) (P3)
 | Webhook integrity | Stripe signatures verified against the raw request body |
 | Input validation | Zod schemas on environment and request payloads |
 | SSRF | Server-side destination policy: scheme allowlist, resolved-address classification, and a guarded connect-time lookup. See above |
-| Dependency licensing | All 72 direct dependencies are permissive; CI enforces it |
+| Response size | Streamed and consumed under a 1 MiB running byte count; decompression counted after inflation. See above |
+| Dependency licensing | All 73 direct dependencies are permissive; CI enforces it |
 
 ## Deployment recommendations
 

@@ -72,6 +72,8 @@ services:
       - DATABASE_URL=${DATABASE_URL_DOCKER:-postgresql://api_monitor:dev_password@postgres:5432/api_monitor}
       - REDIS_URL=redis://redis:6379
       - CHECK_INTERVAL_SECONDS=30
+      # Hard ceiling on the response body a check will read. Clamped to 64 MiB.
+      - MAX_RESPONSE_BYTES=${MAX_RESPONSE_BYTES:-1048576}
       - RESEND_API_KEY=${RESEND_API_KEY}
       - FROM_EMAIL=${FROM_EMAIL}
     depends_on:

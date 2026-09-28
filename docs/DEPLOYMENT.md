@@ -275,5 +275,18 @@ These are real constraints of the current implementation, not oversights.
 | No automated restore | Recovery is manual | Test restores on a schedule |
 | Single-host topology | No multi-node failover | Use a managed platform if high availability is required |
 | Unbounded retention sweep | A single `deleteMany` can lock a large `Check` table | Keep `CLEANUP_DAYS` modest; batching is in `ROADMAP.md` (P1) |
+| A monitor with an `expectedKeyword` fails if its response exceeds `MAX_RESPONSE_BYTES` | The check records `down` with `Response body exceeded the configured size limit.` | Raise `MAX_RESPONSE_BYTES` for that deployment, or drop the keyword. Values above 64 MiB are clamped |
+
+### Response size limit
+
+`MAX_RESPONSE_BYTES` bounds how much of a monitored response the worker reads, in bytes.
+It defaults to `1048576` (1 MiB) and is clamped to 64 MiB, so it cannot be set high
+enough to remove the protection.
+
+A monitor is only affected if it has an `expectedKeyword`, because that is the only thing
+that makes the worker read a body. A status-only check reads no body at all, and neither
+does a redirect hop. Raise it only if a real monitor needs a keyword matched in a larger
+payload; the limit is applied to the decompressed stream, so a compressed response is
+judged on what it expands to, not on its size on the wire.
 
 Full list in [ROADMAP.md](../ROADMAP.md).

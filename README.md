@@ -152,13 +152,11 @@ Two are worth knowing before you deploy this. Both are tracked in
 - **SSRF residual risk.** The worker enforces a server-side destination policy —
   scheme allowlist, resolved-address classification, and a guard installed on the
   socket so the address dialled is the address approved — and it re-validates every
-  redirect hop. 149 tests cover it, including a real listener on loopback that must
+  redirect hop. 179 tests cover it, including a real listener on loopback that must
   never be reached. Four residual risks remain (DNS is still resolved before use, the
   range table is a denylist, a rebind on a redirect hop is argued rather than tested,
   `Host` is not pinned). Read them in [SECURITY.md](SECURITY.md) before exposing the
   product to untrusted users.
-- **Response bodies are uncapped.** A monitor pointing at a large file can exhaust the
-  worker's heap.
 - **The worker cannot run more than one replica.** Scheduling state lives in
   process memory, so a second worker issues duplicate probes and duplicate alerts.
   The Redis-backed queue that fixes this is not implemented yet.
@@ -203,7 +201,7 @@ frontend and backend as untested rather than healthy.
 - [x] v2.0 — Auth, dashboard, monitor management, analytics, alert system, worker service
 - [x] v3.0 — Professionalization: accurate claims/docs, community files, web fixes
 - [x] P0 — SSRF destination policy, redirect re-validation, DNS rebinding guard
-- [ ] P0 — cap monitor response body size
+- [x] P0 — cap monitor response body size (1 MiB default, enforced while streaming)
 - [ ] P1 — Redis job queue: retries, backoff, dead-letter, safe horizontal scaling
 - [ ] P2 — Self-hosted authentication, removing the Supabase dependency
 - [ ] P3 — Workspaces, RBAC, audit log

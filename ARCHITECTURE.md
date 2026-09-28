@@ -317,9 +317,6 @@ policy, and the residual risks.
 These are real and are tracked in `ROADMAP.md`:
 
 - **No RBAC.** Single-owner tenancy only.
-- **Response bodies are uncapped.** `executeCheck` buffers the whole body to evaluate
-  `expectedKeyword`, so a large response can exhaust the worker's heap. Tracked in
-  `ROADMAP.md`.
 - **SSRF residual risk.** The destination policy is in place and covered by tests, but DNS
   is still resolved before use, the range table is a denylist rather than an allowlist, and
   a rebind on a redirect hop is argued rather than tested. See `SECURITY.md`.
@@ -364,6 +361,17 @@ required and `node-cron` cannot express them portably.
 Probe outcomes are `up`, `down`, or `degraded`, where degraded covers slow or partial
 responses. A monitor counts as up when the status code matches `expectedStatus` and, if
 `expectedKeyword` is set, the response body contains that string.
+
+### Response body consumption
+
+The body is requested as a stream and consumed under a running byte count
+(`worker/src/config/response-limit.ts`, 1 MiB by default). It is read **only** when the
+monitor has an `expectedKeyword` — a status-only check, which is the common case, never
+reads a body at all, and the redirect and failed-status paths destroy the stream unread.
+An oversized response aborts the transfer rather than being measured afterwards, and the
+limit is applied to the inflated stream so a small compressed payload cannot expand past
+it. The check then records `down` with a fixed message that carries no address, byte count
+or response content; the detail goes to the worker log. See `SECURITY.md`.
 
 ### Graceful shutdown
 

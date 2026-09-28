@@ -39,16 +39,20 @@ asserts it is never contacted. Disabling the guard was verified to fail the suit
 
 Residual risk is documented in [SECURITY.md](SECURITY.md): DNS is still resolved before use,
 a rebind on a redirect hop is argued rather than tested, the range table is a denylist, and
-`Host` is not pinned. Response body size is **still uncapped** — that is the one item from
-the original list not addressed here, and it is listed below.
+`Host` is not pinned.
 
-### Cap monitor response body size
+### Cap monitor response body size — done
 
-**Status:** not implemented · **Severity:** medium
+**Status:** implemented · **Severity:** was high, now closed
 
-`executeCheck` reads the whole response into memory to check `expectedKeyword`. A monitor
-pointing at a large file can exhaust the worker's heap. The SSRF policy does not address
-this. Required: a `maxContentLength` on the request and a bounded read of the body.
+`executeCheck` used to read the whole response into memory to check `expectedKeyword`, so a
+monitor pointing at a large file could exhaust the worker's heap. The response is now
+requested as a stream and consumed under a running byte count of **1 MiB** by default
+(`MAX_RESPONSE_BYTES`, clamped to 64 MiB), so the transfer is aborted rather than measured
+afterwards. `Content-Length` is an early-out only; chunked, undeclared and compressed
+responses are all bounded, and compression is counted after inflation so a decompression
+bomb cannot get through. See [SECURITY.md](SECURITY.md) for the full guarantee and its
+limits. 30 tests, mutation-checked — reverting to a buffered read fails 20 of them.
 
 ### Test suite is effectively empty — partially addressed
 

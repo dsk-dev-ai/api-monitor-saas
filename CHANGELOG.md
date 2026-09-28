@@ -114,10 +114,36 @@ fetched user-supplied monitor URLs with no destination validation.
   Every failure path now resolves a diagnostic, falling back to the error name and code
   before the generic string.
 
-### Known gaps left open by this change
-- Monitor response bodies are still read in full to evaluate `expectedKeyword`, so a
-  monitor pointing at a large file can exhaust the worker's heap. The SSRF policy does not
-  address this and it is now tracked as its own P0 in [ROADMAP.md](ROADMAP.md).
+### Response bodies are now bounded while they are read
+
+This was the one gap the SSRF work left open, and it is now closed.
+
+The response is requested with `responseType: 'stream'` instead of being collected by the
+HTTP client, and consumed under a running byte count of **1 MiB** by default
+(`MAX_RESPONSE_BYTES`, clamped to a 64 MiB ceiling so the setting cannot be used to switch
+the protection off). An honest `Content-Length` over the limit is refused from the header
+alone; a chunk crossing the limit is never collected, the stream is destroyed, and the
+check records `down` with `Response body exceeded the configured size limit.` No address,
+byte count or response content appears in the error.
+
+`decompress: true` is set explicitly, so the count is applied **after** inflation. That
+ordering is the substance of the fix: a 4 KiB gzip body that expands to 400 MiB has a
+`Content-Length` of 4096, so the header check cannot see it and only the running count
+stops it. gzip, deflate and Brotli are each covered.
+
+A body is now read only when the monitor has an `expectedKeyword`. A status-only check —
+the common case — and every redirect hop and failed-status check abandon the stream
+unread, so an ordinary check holds no response body in memory at any point. A response
+that cannot have a body (`HEAD`, 204, 304) is exempt, because a `HEAD` declares the
+length its matching `GET` would return while sending nothing, and reporting a size failure
+there would break a working monitor that read zero bytes.
+
+30 new tests (23 behaviour, 7 configuration). The suite was mutation-checked: reverting
+to a buffered `await response.data` fails 20 of the 23, dropping the running count fails
+12, counting compressed bytes instead of inflated ones fails the four compression tests,
+and making the message vary with the byte count fails 14. The resource proof is
+socket-level — a real server that cannot finish pushing a 64 MiB body, with the bytes it
+managed to write asserted against the limit.
 
 ## [3.5.0-community] — R1 community baseline
 
