@@ -11,6 +11,23 @@ const booleanFromEnv = z.preprocess((val) => {
   return ['1', 'true', 'yes', 'on'].includes(String(val).toLowerCase());
 }, z.boolean());
 
+/**
+ * An optional variable where "" and whitespace mean "not set".
+ *
+ * `.optional()` alone accepts `undefined` but rejects `""`, and an empty value is the
+ * natural way to write "I have not set this" in a `.env` file or a Compose
+ * `environment:` list — which then fails validation and stops the process. That turns a
+ * documented, harmless default into an outage, so blank is normalised to absent here
+ * rather than at each call site.
+ */
+const optionalString = z.preprocess(
+  (val) => {
+    if (typeof val !== 'string') return val;
+    return val.trim() === '' ? undefined : val.trim();
+  },
+  z.string().min(1).optional()
+);
+
 const envSchema = z.object({
 NODE_ENV: z.enum([
 'development',
@@ -27,13 +44,16 @@ DATABASE_URL: z.string().min(1),
 // account at all and demanding these values would make that deployment impossible to
 // configure. The check below turns them back into hard requirements for a Supabase
 // deployment, so this is a relaxation of *where* they are demanded, not of whether.
-SUPABASE_URL: z.string().url().optional(),
+SUPABASE_URL: optionalString.refine(
+  (val) => val === undefined || z.string().url().safeParse(val).success,
+  { message: 'Must be a valid URL' }
+),
 
-SUPABASE_ANON_KEY: z.string().min(1).optional(),
+SUPABASE_ANON_KEY: optionalString,
 
-SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
+SUPABASE_SERVICE_ROLE_KEY: optionalString,
 
-AUTH_PROVIDER_MODULE: z.string().min(1).optional(),
+AUTH_PROVIDER_MODULE: optionalString,
 
 JWT_SECRET: z.string().min(
 64,
