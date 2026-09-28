@@ -13,9 +13,12 @@ const stubProvider = (name: string): AuthProvider => ({
 });
 
 /**
- * These tests cover the resolver only. The bundled Supabase provider is verified through
- * the Docker stack and the live Supabase deployment, because constructing it requires real
- * Supabase configuration and this file must stay runnable with no environment set.
+ * These tests cover the resolver only, and must stay runnable with no environment
+ * configured at all. That is not just tidiness: `config/env` validates on import and calls
+ * `process.exit(1)` when it is incomplete, so any test that reaches the real
+ * `config/supabase` can kill the Jest worker outright rather than fail an assertion. The
+ * bundled Supabase provider is therefore mocked here and verified for real by the running
+ * stack.
  */
 describe('auth provider resolution', () => {
   beforeEach(() => {
@@ -38,11 +41,20 @@ describe('auth provider resolution', () => {
     });
 
     it('should select the bundled Supabase provider by default', () => {
-      process.env.SUPABASE_URL = 'https://project.supabase.co';
-      process.env.SUPABASE_ANON_KEY = 'anon-key';
-      process.env.SUPABASE_SERVICE_ROLE_KEY = 'service-role-key';
+      // Mocked deliberately. Loading the real module constructs a Supabase client, which
+      // validates the whole environment and calls process.exit(1) when it is incomplete —
+      // that would take the Jest worker down with it, and the unit under test here is
+      // which module the resolver picks, not whether Supabase works. The real provider is
+      // covered by the running stack.
+      jest.doMock(
+        './supabase-provider',
+        () => ({ supabaseAuthProvider: stubProvider('supabase') }),
+        { virtual: true }
+      );
 
       expect(getAuthProvider().name).toBe('supabase');
+
+      jest.dontMock('./supabase-provider');
     });
   });
 

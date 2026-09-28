@@ -8,8 +8,9 @@ import { execFileSync } from 'child_process';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import * as ts from 'typescript';
 
-const DIST_ENV = path.resolve(__dirname, '../../dist/config/env.js');
+const SOURCE_ENV = path.resolve(__dirname, 'env.ts');
 
 /** The copied module still needs zod and dotenv, so it is pointed at the repo's modules. */
 const NODE_PATH = [
@@ -33,20 +34,36 @@ interface RunResult {
 }
 
 /**
- * Copy the compiled env module somewhere with no `.env` above it, then load it.
+ * Transpile `env.ts` into a throwaway directory and load it in a child process.
  *
- * Two things make this necessary. `config/env` calls `dotenv.config()` with a path
- * resolved relative to its own directory, so requiring it in place would silently load the
- * developer's real `.env` and turn every negative test into a positive one. And validation
- * happens at import, with `process.exit(1)` on failure, so it cannot be observed in-process
- * at all. The copy is given its own `pkg/dist/config` layout so the same relative lookup
- * resolves inside a directory tree that provably has no `.env`.
+ * Three things force this shape.
+ *
+ * `config/env` validates on import and calls `process.exit(1)` on failure, so it cannot be
+ * observed in-process — that would kill the Jest worker rather than fail an assertion.
+ *
+ * It also calls `dotenv.config()` against a path resolved from its own directory, so
+ * loading it in place would pick up the developer's real `.env` and turn every negative
+ * test into a positive one. The transpiled copy is given its own `pkg/dist/config` layout
+ * so that same relative lookup lands in a tree that provably has no `.env`.
+ *
+ * And it transpiles the source rather than copying `dist/`, so the suite does not depend
+ * on a build having run first. Depending on a build artifact made this suite pass or fail
+ * depending on what happened to be in the working tree.
  */
 function loadEnv(vars: Record<string, string | undefined>): RunResult {
   const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'apimon-env-'));
   const configDir = path.join(tmpRoot, 'pkg', 'dist', 'config');
   fs.mkdirSync(configDir, { recursive: true });
-  fs.copyFileSync(DIST_ENV, path.join(configDir, 'env.js'));
+
+  const transpiled = ts.transpileModule(fs.readFileSync(SOURCE_ENV, 'utf8'), {
+    compilerOptions: {
+      module: ts.ModuleKind.CommonJS,
+      target: ts.ScriptTarget.ES2020,
+      esModuleInterop: true,
+    },
+    fileName: 'env.ts',
+  });
+  fs.writeFileSync(path.join(configDir, 'env.js'), transpiled.outputText);
 
   const env: Record<string, string> = { ...BASE_ENV };
   // The copied tree must not find a `.env` at any level it looks in.
