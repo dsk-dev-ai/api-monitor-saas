@@ -26,8 +26,16 @@ export const authMiddleware = async (
   try {
     const authHeader = req.headers.authorization;
 
+    // One message for every failed credential, which is what `auth/provider.ts` promises:
+    // "the core maps every failure to a single 401 so that credential validity is not
+    // distinguishable by timing or message". Two distinct messages, one for a missing header
+    // and one for an unusable token, let a caller tell "sent nothing" from "sent something
+    // that did not work" — a free oracle for deciding whether a token is close to valid, and
+    // a needless difference between what this file documents and what it does.
+    const unauthenticated = () => new AppError('Authentication required', 401);
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new AppError('Authentication required', 401);
+      throw unauthenticated();
     }
 
     const token = authHeader.split(' ')[1];
@@ -35,7 +43,7 @@ export const authMiddleware = async (
     const identity = await getAuthProvider().verifyToken(token);
 
     if (!identity) {
-      throw new AppError('Invalid or expired token', 401);
+      throw unauthenticated();
     }
 
     const dbUser = await prisma.user.findUnique({

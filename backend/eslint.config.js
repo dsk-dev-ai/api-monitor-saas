@@ -18,6 +18,14 @@ module.exports = [
         // optional integrations are only required when actually selected.
         require: 'readonly',
         module: 'readonly',
+        // Used by src/server.ts, which the old lint glob never reached.
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly',
+        setImmediate: 'readonly',
+        Buffer: 'readonly',
+        URL: 'readonly',
         // Jest globals for test files
         describe: 'readonly',
         it: 'readonly',
