@@ -17,7 +17,7 @@ const NODE_PATH = [
   path.resolve(__dirname, '../../../node_modules'),
 ].join(path.delimiter);
 /** Everything `config/env` requires regardless of which identity system is selected. */
-const BASE_ENV: NodeJS.ProcessEnv = {
+const BASE_ENV: Record<string, string> = {
   NODE_ENV: 'production',
   PORT: '3001',
   DATABASE_URL: 'postgresql://u:p@localhost:5432/db',
@@ -48,7 +48,7 @@ function loadEnv(vars: Record<string, string | undefined>): RunResult {
   fs.mkdirSync(configDir, { recursive: true });
   fs.copyFileSync(DIST_ENV, path.join(configDir, 'env.js'));
 
-  const env: NodeJS.ProcessEnv = { ...BASE_ENV };
+  const env: Record<string, string> = { ...BASE_ENV };
   // The copied tree must not find a `.env` at any level it looks in.
   env.HOME = tmpRoot;
   env.NODE_PATH = NODE_PATH;
