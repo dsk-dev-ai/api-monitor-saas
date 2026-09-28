@@ -173,6 +173,9 @@ valid Supabase access token as `Authorization: Bearer <token>`.
 
 ### Auth — `backend/src/routes/auth.ts`
 
+Mounted only when the bundled Supabase provider is in use. See
+[Replacing the identity system](#replacing-the-identity-system).
+
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
 | POST | `/auth/signup` | no | Create credentials, provisions local `User` |
@@ -260,6 +263,43 @@ Browser → POST /api/v1/auth/signin
 Tokens are issued and validated by Supabase. A local `User` row is provisioned on signup and
 used for data ownership. Passwords never reach application code — `bcryptjs` is retained as a
 dependency for the self-hosted auth work tracked in `ROADMAP.md`.
+
+### Replacing the identity system
+
+`authMiddleware` does not talk to Supabase directly. It asks whichever `AuthProvider` the
+resolver in `backend/src/auth/index.ts` selects, and the default answer is the bundled
+Supabase provider. The interface is one method — `verifyToken(token)` — because that is the
+only thing the core needs from an identity system.
+
+```ts
+interface AuthProvider {
+  readonly name: string;
+  verifyToken(token: string): Promise<AuthenticatedUser | null>;
+}
+```
+
+Set `AUTH_PROVIDER_MODULE` to the module id of an implementation to authenticate against
+something else. Resolution is lazy: the Supabase client is constructed only when the bundled
+provider is the one selected, so a deployment using another identity system needs no Supabase
+configuration and never loads `config/supabase` or the Supabase `/api/v1/auth` routes.
+
+Two things deliberately stay in the core regardless of provider:
+
+- **The account check.** The core still looks the user up in its own database and rejects
+  unknown, disabled, or missing accounts, so an identity system cannot authenticate someone
+  this installation has disabled.
+- **The error shape.** Every credential failure is a single 401. A provider cannot leak
+  whether a token existed, was expired, or was revoked, because the core collapses the
+  distinctions.
+
+Whatever module is named owns the entire auth surface, including sign-in, sign-out, and
+session lifetime. The core ships no fallback routes for it.
+
+**This seam covers the API, not the dashboard.** The bundled frontend in `frontend/` is
+written against the Supabase SDK and its sign-in, sign-out and token-refresh calls are not
+pluggable, so a deployment using another identity system supplies its own front end and
+points `NEXT_PUBLIC_API_URL` at the core. That is the honest boundary: the monitoring core
+becomes identity-agnostic, and the shipped dashboard does not follow it automatically.
 
 ### Authorization
 

@@ -24,7 +24,7 @@ notFound,
 } from './middleware/error';
 
 // Routes
-import authRoutes from './routes/auth';
+import { isExternalAuthProvider } from './auth';
 import monitorRoutes from './routes/monitors';
 import analyticsRoutes from './routes/analytics';
 import billingRoutes from './routes/billing';
@@ -175,11 +175,24 @@ alerts:
 });
 
 // API Routes
-app.use(
-'/api/v1/auth',
-authLimiter,
-authRoutes
-);
+//
+// The core's own auth routes are Supabase-specific: they speak Supabase's session
+// format and call Supabase directly. When an operator points AUTH_PROVIDER_MODULE at a
+// different identity system, that system owns the whole auth surface and mounting these
+// would leave a second, half-working sign-in path on the same origin.
+if (!isExternalAuthProvider()) {
+  // Required lazily, not imported at the top of this file. `routes/auth` builds a Supabase
+  // client as it loads, and that client refuses to construct without a Supabase URL, so a
+  // static import would make every deployment crash at startup for a dependency it does
+  // not use. The same reasoning applies to `config/supabase`, which is why the resolver
+  // in `src/auth` loads its provider on demand too.
+  const authRoutes = require('./routes/auth').default as import('express').Router;
+  app.use(
+    '/api/v1/auth',
+    authLimiter,
+    authRoutes
+  );
+}
 
 app.use(
 '/api/v1/monitors',

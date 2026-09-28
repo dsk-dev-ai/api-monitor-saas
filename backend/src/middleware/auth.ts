@@ -1,9 +1,23 @@
 import { Response, NextFunction } from 'express';
-import { supabaseAdmin } from '../config/supabase';
+import { getAuthProvider } from '../auth';
 import { prisma } from '../config/database';
 import { AuthRequest } from '../types';
 import { AppError } from './error';
 
+/**
+ * Require a valid credential and attach its user to the request.
+ *
+ * Which identity system is asked is decided by `AUTH_PROVIDER_MODULE` (see
+ * `src/auth/provider.ts`); everything below this line is provider-independent. The
+ * database lookup stays here on purpose: the core owns the record that decides whether an
+ * account is usable, so an alternative identity system cannot accidentally authenticate a
+ * user this installation has disabled.
+ *
+ * Every failure produces the same 401. Distinguishing "no token", "bad token" and "expired
+ * token" in the response would let a caller learn which tokens exist, and the account
+ * check below deliberately reports differently because that is a real, actionable
+ * condition for the user rather than a probe of someone else's credential.
+ */
 export const authMiddleware = async (
   req: AuthRequest,
   res: Response,
@@ -18,18 +32,15 @@ export const authMiddleware = async (
 
     const token = authHeader.split(' ')[1];
 
-    const {
-      data: { user },
-      error,
-    } = await supabaseAdmin.auth.getUser(token);
+    const identity = await getAuthProvider().verifyToken(token);
 
-    if (error || !user) {
+    if (!identity) {
       throw new AppError('Invalid or expired token', 401);
     }
 
     const dbUser = await prisma.user.findUnique({
       where: {
-        id: user.id,
+        id: identity.id,
       },
       include: {
         subscription: true,
@@ -66,6 +77,14 @@ export const authMiddleware = async (
   }
 };
 
+/**
+ * Attach a user if a valid credential is present, and continue either way.
+ *
+ * Used by endpoints that are public but render differently when signed in. A credential
+ * that fails to verify is treated as absent rather than as an error: this is not the
+ * endpoint where a caller is being authenticated, and turning a stale token in local
+ * storage into a hard failure here would break public pages for no security benefit.
+ */
 export const optionalAuth = async (
   req: AuthRequest,
   res: Response,
@@ -80,14 +99,12 @@ export const optionalAuth = async (
 
     const token = authHeader.split(' ')[1];
 
-    const {
-      data: { user },
-    } = await supabaseAdmin.auth.getUser(token);
+    const identity = await getAuthProvider().verifyToken(token);
 
-    if (user) {
+    if (identity) {
       req.user = {
-        id: user.id,
-        email: user.email!,
+        id: identity.id,
+        email: identity.email,
       };
     }
 

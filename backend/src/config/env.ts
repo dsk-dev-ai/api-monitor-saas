@@ -22,11 +22,18 @@ PORT: z.coerce.number().int().positive().default(3001),
 
 DATABASE_URL: z.string().min(1),
 
-SUPABASE_URL: z.string().url(),
+// Required only when the bundled Supabase identity system is in use. When
+// AUTH_PROVIDER_MODULE points at an alternative, this installation has no Supabase
+// account at all and demanding these values would make that deployment impossible to
+// configure. The check below turns them back into hard requirements for a Supabase
+// deployment, so this is a relaxation of *where* they are demanded, not of whether.
+SUPABASE_URL: z.string().url().optional(),
 
-SUPABASE_ANON_KEY: z.string().min(1),
+SUPABASE_ANON_KEY: z.string().min(1).optional(),
 
-SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
+SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
+
+AUTH_PROVIDER_MODULE: z.string().min(1).optional(),
 
 JWT_SECRET: z.string().min(
 64,
@@ -83,6 +90,23 @@ data.ENABLE_EMAILS &&
 throw new Error(
 'RESEND_API_KEY required in production'
 );
+}
+
+// A Supabase deployment still needs all three values, and finding out at the first login
+// attempt rather than at startup is a bad way to learn it. An external provider
+// deployment must not have them required at all.
+if (!data.AUTH_PROVIDER_MODULE) {
+  const missing = (['SUPABASE_URL', 'SUPABASE_ANON_KEY', 'SUPABASE_SERVICE_ROLE_KEY'] as const).filter(
+    (key) => !data[key]
+  );
+  if (missing.length > 0) {
+    console.error(
+      `Missing required environment variable(s): ${missing.join(', ')}.\n` +
+        'The bundled Supabase identity system is selected because AUTH_PROVIDER_MODULE is not set.\n' +
+        'Set the Supabase values, or set AUTH_PROVIDER_MODULE to use a different identity system.'
+    );
+    process.exit(1);
+  }
 }
 
 if (

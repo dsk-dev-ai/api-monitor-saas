@@ -114,6 +114,11 @@ rotation stored in the application database, account management, and migration f
 Supabase accounts. `bcryptjs` and `jsonwebtoken` are already dependencies. Enterprise SSO
 (SAML and OIDC) sits on top of this and is a separate item below.
 
+**Foundation now in place:** the core authenticates through the `AuthProvider` interface
+(`backend/src/auth/provider.ts`), so an implementation can be supplied via
+`AUTH_PROVIDER_MODULE` without forking the monitoring code. That interface is the
+extension point; the authentication system itself is still not implemented here.
+
 ---
 
 ## P3 — Organization and access control

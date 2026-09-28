@@ -94,6 +94,24 @@ Set at minimum:
 Optional, feature-gated: `STRIPE_*` with `ENABLE_BILLING=true`, `RESEND_API_KEY`
 and `FROM_EMAIL` with `ENABLE_EMAILS=true`.
 
+### Using a different identity system
+
+`SUPABASE_URL`, `SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY` are required for the
+default configuration. If you set `AUTH_PROVIDER_MODULE` instead, the three Supabase values
+are not required and the backend does not load the Supabase client at all. The named module
+is then responsible for the whole auth surface, including sign-in, sign-out and session
+lifetime, and the core's own `/api/v1/auth` routes are not mounted.
+
+The module must be resolvable by the compiled backend (an installed package name, or a path
+relative to the backend's working directory) and must export an object with a `name` string
+and a `verifyToken(token)` method, as either a default export, a named `authProvider`
+export, or `module.exports`. A module that fails to load, or that does not match this shape,
+stops the process at startup rather than falling back to Supabase — a silent fallback would
+authenticate you against the wrong identity system.
+
+A provider must be a full identity system. The core's middleware verifies the token the
+provider issues and will not mint, refresh, or revoke tokens for it.
+
 ### 3. TLS certificates
 
 ```bash

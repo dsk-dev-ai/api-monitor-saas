@@ -8,6 +8,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/) and this 
 The highest-priority security defect in the shipped product is fixed: the worker
 fetched user-supplied monitor URLs with no destination validation.
 
+### Added
+- **Pluggable identity system for the core.** `authMiddleware` now authenticates through an
+  `AuthProvider` (`backend/src/auth/provider.ts`) resolved by `backend/src/auth/index.ts`.
+  The bundled Supabase provider is the default and the supported community path, and the
+  default configuration is unchanged. Setting `AUTH_PROVIDER_MODULE` to a module exporting
+  that one-method interface replaces the identity system without forking the core. The
+  local account check and the single-401 error shape stay in the core either way.
+  This is the seam the self-hosted authentication work in `ROADMAP.md` (P2) is built on; it
+  is not self-hosted authentication itself, which is not implemented.
+
 ### Security
 - **SSRF in the monitoring worker — fixed.** Users supply monitor URLs and the worker
   fetches them, with no destination validation. Any user who could create a monitor could

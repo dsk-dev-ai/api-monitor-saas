@@ -303,10 +303,28 @@ data. Tracked in [ROADMAP.md](ROADMAP.md) (P3).
 
 ### The backend requires a Supabase service-role key
 
-The backend holds a service-role key to verify tokens. Anyone with access to that
-key has full administrative control of the Supabase auth schema. Treat it as a
-production secret: set it in the environment only, never in a committed file, and
-rotate it if it is exposed.
+This is true of the default configuration only. When `AUTH_PROVIDER_MODULE`
+selects a different identity system, no Supabase key is needed and none is loaded.
+
+In the default configuration the backend holds a service-role key to verify tokens.
+Anyone with access to that key has full administrative control of the Supabase auth
+schema. Treat it as a production secret: set it in the environment only, never in a
+committed file, and rotate it if it is exposed.
+
+### A replacement identity system is trusted, not verified
+
+`AUTH_PROVIDER_MODULE` lets an operator substitute the whole authentication surface, and the
+core accepts whatever that module returns. The core still requires a matching local `User`
+row, but it has no way to check *how* the provider established that identity — a provider
+that returns a user for any non-empty token turns the API into an unauthenticated one. The
+module id is therefore an operator decision with the same weight as the service-role key
+above: treat a provider you did not write as trusted code that runs inside the request path.
+The contract is documented in `backend/src/auth/provider.ts`.
+
+The seam applies to the API only. The bundled frontend in `frontend/` calls the Supabase SDK
+directly and has no equivalent provider indirection, so a deployment using a different
+identity system must supply its own front end; the shipped dashboard is not covered by the
+`AUTH_PROVIDER_MODULE` guarantee.
 
 `.dockerignore` files exclude `.env` from the build context specifically so this
 key is not baked into image layers. Verify that exclusion still holds after any
